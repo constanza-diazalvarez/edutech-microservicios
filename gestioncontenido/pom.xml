@@ -7,10 +7,10 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>auth</artifactId>
+    <artifactId>gestioncontenido</artifactId>
     <packaging>jar</packaging>
 
-    <name>auth</name>
+    <name>gestioncontenido</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
