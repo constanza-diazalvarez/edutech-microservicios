@@ -9,17 +9,10 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "usuarios")
-@Data //genera: getters, setters, toString(), equals(), hashCode()
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-/*Patron Builder
-* Usuario usuario = Usuario.builder()
-    .nombre("Juan Pérez")
-    .correo("juan@ejemplo.com")
-    .contraseña("1234segura")
-    .build();
-*/
 public class Usuario {
 
     @Id
@@ -35,7 +28,11 @@ public class Usuario {
     @Column(nullable = false)
     private String password;
 
-    @ManyToOne(fetch = FetchType.EAGER) //significa que al cargar un usuario se carga altiro su rol
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;
+
+    @Column(nullable = false)
+    private boolean activo = true;
+
 }

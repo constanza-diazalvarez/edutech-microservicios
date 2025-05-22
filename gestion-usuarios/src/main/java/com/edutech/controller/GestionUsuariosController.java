@@ -1,0 +1,58 @@
+package com.edutech.controller;
+
+import com.edutech.model.Usuario;
+import com.edutech.service.UsuarioService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/usuarios")
+public class GestionUsuariosController {
+
+    private final UsuarioService usuarioService;
+
+    @Autowired
+    public GestionUsuariosController(UsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
+    }
+
+    @GetMapping
+    public List<Usuario> listarUsuarios() {
+        return usuarioService.findAll();
+    }
+
+    @PostMapping
+    public Usuario crearUsuario(@RequestBody Usuario usuario) {
+        return usuarioService.save(usuario);
+    }
+
+    @PutMapping("/{id}")
+    public void eliminarUsuario(@PathVariable Integer id) {
+        usuarioService.deleteById(id);
+    }
+
+    @GetMapping("/perfil/{nombreUsuario}")
+    public Optional<Usuario> buscarUsuarioPorNombre(@PathVariable String nombreUsuario) {
+        return usuarioService.findByNombre(nombreUsuario);
+    }
+
+    @PutMapping("/perfil/{nombreUsuario}")
+    public Optional<Usuario> modificarUsuario(@PathVariable String nombreUsuario, @RequestBody Usuario datosNuevos) {
+        Optional<Usuario> usuarioExistente = usuarioService.findByNombre(nombreUsuario);
+
+        if (usuarioExistente.isPresent()) {
+            Usuario u = usuarioExistente.get();
+
+            u.setNombre(datosNuevos.getNombre());
+            u.setCorreo(datosNuevos.getCorreo());
+            u.setPassword(datosNuevos.getPassword());
+
+            return Optional.of(usuarioService.save(u));
+        }
+        return Optional.empty();
+    }
+
+}
