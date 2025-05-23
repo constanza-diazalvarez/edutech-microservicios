@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>auth</module>
+        <module>gestion-usuarios</module>
         <module>gestioncursos</module>
         <module>gestioncontenido</module>
         <module>interaccion</module>
@@ -33,6 +34,8 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+
 
     <dependencies>
         <dependency>

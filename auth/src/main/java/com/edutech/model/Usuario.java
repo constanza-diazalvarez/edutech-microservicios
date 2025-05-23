@@ -1,0 +1,41 @@
+package com.edutech.model;
+
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "usuarios")
+@Data //genera: getters, setters, toString(), equals(), hashCode()
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+/*Patron Builder
+* Usuario usuario = Usuario.builder()
+    .nombre("Juan Pérez")
+    .correo("juan@ejemplo.com")
+    .contraseña("1234segura")
+    .build();
+*/
+public class Usuario {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(nullable = false)
+    private String nombre;
+
+    @Column(nullable = false)
+    private String correo;
+
+    @Column(nullable = false)
+    private String password;
+
+    @ManyToOne(fetch = FetchType.EAGER) //significa que al cargar un usuario se carga altiro su rol
+    @JoinColumn(name = "rol_id", nullable = false)
+    private Rol rol;
+}

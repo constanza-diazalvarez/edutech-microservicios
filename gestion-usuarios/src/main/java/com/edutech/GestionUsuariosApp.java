@@ -4,8 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AuthApp {
+public class GestionUsuariosApp {
     public static void main( String[] args ) {
-        SpringApplication.run(AuthApp.class, args);
+        SpringApplication.run(GestionUsuariosApp.class, args);
     }
 }
