@@ -11,6 +11,9 @@
     <modules>
         <module>auth</module>
         <module>gestion-usuarios</module>
+        <module>gestioncursos</module>
+        <module>gestioncontenido</module>
+        <module>interaccion</module>
     </modules>
 
     <properties>
@@ -31,6 +34,8 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+
 
     <dependencies>
         <dependency>

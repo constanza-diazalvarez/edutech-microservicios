@@ -54,22 +54,6 @@ public class GestionUsuariosController {
         return usuarioService.findByNombre(nombreUsuario);
     }
 
-    /*
-    @PutMapping("/perfil/{nombreUsuario}")
-    public Optional<Usuario> modificarUsuario(@PathVariable String nombreUsuario, @RequestBody Usuario datosNuevos) {
-        Optional<Usuario> usuarioExistente = usuarioService.findByNombre(nombreUsuario);
-
-        if (usuarioExistente.isPresent()) {
-            Usuario u = usuarioExistente.get();
-
-            u.setNombre(datosNuevos.getNombre());
-            u.setCorreo(datosNuevos.getCorreo());
-            u.setPassword(datosNuevos.getPassword());
-
-            return Optional.of(usuarioService.save(u));
-        }
-        return Optional.empty();
-    }*/
     @PutMapping("/perfil/{nombreUsuario}")
     public Optional<Usuario> modificarUsuario(@RequestHeader("Authorization") String authHeader,
                                               @PathVariable("nombreUsuario") String nombreUsuario,
