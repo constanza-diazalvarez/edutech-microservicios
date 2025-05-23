@@ -34,4 +34,10 @@ public class AuthController {
 
         throw new RuntimeException("Credenciales inválidas");
     }
+
+    @PostMapping("/registrar")
+    public Usuario registrarUsuario(@RequestBody Usuario usuario) {
+        return usuarioService.save(usuario);
+    }
+
 }

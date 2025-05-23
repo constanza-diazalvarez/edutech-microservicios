@@ -68,7 +68,8 @@ public class JwtUtil {
         Claims claims = obtenerClaims(token);
         String rol = (String) claims.get("rol");
 
-        if (!rol.equals(rolEsperado)) {
+        if (!rol.equalsIgnoreCase(rolEsperado)) {
+            System.out.println("Token inválido");
             throw new RuntimeException("No autorizado");
         }
     }
