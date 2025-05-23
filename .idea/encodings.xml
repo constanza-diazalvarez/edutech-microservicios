@@ -11,10 +11,16 @@
     <file url="file://$PROJECT_DIR$/gestioncontenido/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/gestioncursos/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/gestioncursos/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/inscripcion/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/inscripcion/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/inscripciones/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/inscripciones/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/interaccion/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/interaccion/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pago/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pago/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/progreso/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/progreso/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>

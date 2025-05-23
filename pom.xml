@@ -14,6 +14,9 @@
         <module>gestioncursos</module>
         <module>gestioncontenido</module>
         <module>interaccion</module>
+        <module>progreso</module>
+        <module>pago</module>
+        <module>inscripcion</module>
     </modules>
 
     <properties>
@@ -34,8 +37,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-
 
     <dependencies>
         <dependency>
@@ -63,5 +64,23 @@
             </plugins>
         </pluginManagement>
     </build>
-
 </project>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
