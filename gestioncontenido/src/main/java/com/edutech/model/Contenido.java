@@ -1,7 +1,6 @@
 package com.edutech.model;
 
 import jakarta.persistence.*;
-import jdk.jfr.ContentType;
 import lombok.*;
 
 @Entity
@@ -17,6 +16,7 @@ public class Contenido {
     @Column(nullable = false)
     private String nombre;
     @Column(nullable = false)
+    @On
     private Integer idCurso;
     @Column(nullable = false)
     private String tipoContenido;

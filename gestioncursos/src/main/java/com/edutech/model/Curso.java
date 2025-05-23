@@ -7,8 +7,9 @@ import lombok.*;
 @Entity
 @Table(name="Cursos")
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
+
 public class Curso {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,7 +17,7 @@ public class Curso {
     @Column(nullable = false)
     private String nombreCurso;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Integer idUsuario;
 
     @Column(nullable = true)
@@ -26,6 +27,5 @@ public class Curso {
     @Column(nullable = false)
     private String nivel;
     @Column(nullable = false)
-    private int duracion;//semanas, meses, idk
-
+    private int duracion;
 }

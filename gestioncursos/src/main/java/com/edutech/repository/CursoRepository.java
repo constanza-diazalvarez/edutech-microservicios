@@ -24,6 +24,6 @@ public interface CursoRepository extends JpaRepository<Curso, Integer> {
     // Buscar cursos que contengan una palabra clave
     List<Curso> findByNombreCursoContainingIgnoreCase(String nombre);
 
-
+    Curso findCursoByIdCurso(Integer idCurso);
 }
 

@@ -58,10 +58,11 @@ public class CursoService {
                 .orElseThrow(() -> new RuntimeException("Curso no encontrado con ID: " + idCurso));
     }
 
-    public Curso vincularCursoConInstructor(Integer usuarioId, Curso curso) {
+    public Curso vincularCursoConInstructor(Integer usuarioId, Integer cursoId) {
         // Llamada REST al microservicio X para obtener instructor
         String url = "http://microservicio-X/api/usuarios/{usuarioId}";
         UsuarioDTO instructor = restTemplate.getForObject(url, UsuarioDTO.class, usuarioId);
+        Curso curso = cursoRepository.findCursoByIdCurso(cursoId);
         if (instructor == null) {
             throw new RuntimeException("Instructor no encontrado");
         }

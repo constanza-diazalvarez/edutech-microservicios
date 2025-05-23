@@ -33,9 +33,9 @@ public class CursoController {
         return ResponseEntity.ok().body("Curso eliminado");
     }
 
-    @PostMapping("/vincular-instructor-curso/{usuarioId}")
-    public ResponseEntity<String> vincularCurso(@PathVariable Integer usuarioId, @RequestBody Curso curso) {
-        cursoService.vincularCursoConInstructor(usuarioId, curso);
+    @PostMapping("/vincular-instructor-curso/{usuarioId}{cursoId}")
+    public ResponseEntity<String> vincularCurso(@PathVariable Integer usuarioId, @PathVariable Integer cursoId) {
+        cursoService.vincularCursoConInstructor(usuarioId, cursoId);
         return ResponseEntity.ok().body("Instructor vinculado con curso");
     }
 
