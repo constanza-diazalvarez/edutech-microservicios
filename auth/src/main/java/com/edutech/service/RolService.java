@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface RolService {
-    public Rol findById(int id);
-    public List<Rol> findAll();
-    public void save(Rol rol);
-    public void delete(Rol rol);
+    Rol findById(int id);
+    List<Rol> findAll();
+    void save(Rol rol);
+    void delete(Rol rol);
 
     Optional<Rol> findByRol(String rol);
 }

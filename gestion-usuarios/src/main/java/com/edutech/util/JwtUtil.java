@@ -12,10 +12,11 @@ public class JwtUtil {
     private static final String SECRET_STRING = "clave1234clave1234clave1234clave1234";
     private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET_STRING.getBytes());
 
-    public static String generarToken(String nombreUsuario, String rol) {
+    public static String generarToken(String nombreUsuario, String rol, Integer idUsuario) {
         return Jwts.builder()
                 .setSubject(nombreUsuario)
                 .claim("rol", rol)
+                .claim("id", idUsuario)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .signWith(SECRET_KEY, SignatureAlgorithm.HS256)

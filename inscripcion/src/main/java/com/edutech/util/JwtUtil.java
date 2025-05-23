@@ -41,6 +41,15 @@ public class JwtUtil {
         return claims.get("rol", String.class);
     }
 
+    public static Integer obtenerIdUsuario(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("idUsuario", Integer.class);
+    }
+
 
     public static boolean validarToken(String token, String nombreUsuario) {
         String usuario = obtenerUsername(token);

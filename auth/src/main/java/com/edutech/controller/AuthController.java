@@ -27,8 +27,9 @@ public class AuthController {
             Usuario usuarioActual = usuario.get();
             if (usuarioActual.getPassword().equals(loginRequest.getPassword())) {
                 String rol = usuarioActual.getRol().getRol();
-                String token = JwtUtil.generarToken(usuarioActual.getNombre(), rol);
-                return new LoginResponse(token, rol);
+                Integer id = usuarioActual.getId();
+                String token = JwtUtil.generarToken(usuarioActual.getNombre(), rol, usuarioActual.getId());
+                return new LoginResponse(token, rol, id);
             }
         }
 

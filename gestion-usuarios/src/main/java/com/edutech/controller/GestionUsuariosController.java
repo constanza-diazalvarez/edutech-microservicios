@@ -12,25 +12,19 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/usuarios")
 public class GestionUsuariosController {
-
     private final UsuarioService usuarioService;
 
     @Autowired
     public GestionUsuariosController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
-    /*
-    @GetMapping
-    public List<Usuario> listarUsuarios() {
-        return usuarioService.findAll();
-    }*/
+
     @GetMapping
     public List<Usuario> listarUsuarios(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         JwtUtil.validarRolToken(token, "ADMIN");
         return usuarioService.findAll();
     }
-
 
     @PostMapping
     public Usuario crearUsuario(@RequestHeader("Authorization") String authHeader, @RequestBody Usuario usuario) {
@@ -39,10 +33,9 @@ public class GestionUsuariosController {
         return usuarioService.save(usuario);
     }
 
-
     @PutMapping("/{id}")
     public void eliminarUsuario(@RequestHeader("Authorization") String authHeader,
-                                @PathVariable Integer id) {
+                                @PathVariable("id") Integer id) {
         String token = authHeader.replace("Bearer ", "");
         JwtUtil.validarRolToken(token, "ADMIN");
         usuarioService.deleteById(id);
@@ -75,6 +68,4 @@ public class GestionUsuariosController {
         }
         return Optional.empty();
     }
-
-
 }

@@ -1,7 +1,6 @@
 package com.edutech.service;
 
 import com.edutech.model.Usuario;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Optional;
