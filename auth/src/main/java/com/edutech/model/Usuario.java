@@ -13,13 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-/*Patron Builder
-* Usuario usuario = Usuario.builder()
-    .nombre("Juan Pérez")
-    .correo("juan@ejemplo.com")
-    .contraseña("1234segura")
-    .build();
-*/
 public class Usuario {
 
     @Id
