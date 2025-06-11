@@ -17,8 +17,5 @@ public class DescuentoService {
         return repository.save(descuento);
     }
 
-    public Optional<Descuento> obtenerDescuentoPorUsuario(Long userId) {
-        return repository.findById(userId);
-    }
 }
 

@@ -22,12 +22,15 @@ public class Usuario {
     @Column(nullable = false)
     private String nombre;
 
+    //sacar
     @Column(nullable = false)
     private String correo;
 
+    //sacar
     @Column(nullable = false)
     private String password;
 
+    //sacar
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;

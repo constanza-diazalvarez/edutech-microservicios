@@ -19,6 +19,7 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    //quitar por duplicidad con gestion-usuarios
     @Column(nullable = false)
     private String nombre;
 
@@ -28,7 +29,6 @@ public class Usuario {
     @Column(nullable = false)
     private String password;
 
-    @ManyToOne(fetch = FetchType.EAGER) //significa que al cargar un usuario se carga altiro su rol
-    @JoinColumn(name = "rol_id", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER) //significa que al cargar un usuario se carga altiro su rol@JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;
 }

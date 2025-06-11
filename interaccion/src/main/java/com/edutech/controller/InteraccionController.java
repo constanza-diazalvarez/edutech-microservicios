@@ -12,7 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/interacciones")
+//@RequestMapping("/api/interacciones")
+@RequestMapping("/interaccion")
 public class InteraccionController {
     @Autowired
     private ComentarioService comentarioService;

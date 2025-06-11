@@ -2,9 +2,9 @@ package com.edutech.controller;
 
 import com.edutech.model.Usuario;
 import com.edutech.service.UsuarioService;
-import com.edutech.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import utils.JwtUtil;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,8 +21,8 @@ public class GestionUsuariosController {
 
     @GetMapping
     public List<Usuario> listarUsuarios(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.replace("Bearer ", "");
-        JwtUtil.validarRolToken(token, "ADMIN");
+        /*String token = authHeader.replace("Bearer ", "");
+        JwtUtil.validarRolToken(token, "ADMIN");*/
         return usuarioService.findAll();
     }
 
@@ -52,7 +52,7 @@ public class GestionUsuariosController {
                                               @PathVariable("nombreUsuario") String nombreUsuario,
                                               @RequestBody Usuario datosNuevos) {
         String token = authHeader.replace("Bearer ", "");
-        System.out.println(token);
+        //System.out.println(token);
         JwtUtil.validarRolToken(token, "ESTUDIANTE");
 
         Optional<Usuario> usuarioExistente = usuarioService.findByNombre(nombreUsuario);

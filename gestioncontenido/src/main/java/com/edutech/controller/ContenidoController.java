@@ -12,7 +12,8 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/contenido")
+//@RequestMapping("/api/contenido")
+@RequestMapping("/contenido")
 public class ContenidoController {
     @Autowired
     private final ContenidoService contenidoService;

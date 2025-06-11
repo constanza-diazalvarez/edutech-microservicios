@@ -1,4 +1,4 @@
-package com.edutech.util;
+package utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -41,6 +41,15 @@ public class JwtUtil {
         return claims.get("rol", String.class);
     }
 
+    public static Integer obtenerId(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("idUsuario", Integer.class);
+    }
+
 
     public static boolean validarToken(String token, String nombreUsuario) {
         String usuario = obtenerUsername(token);
@@ -54,5 +63,23 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
         return claims.getExpiration().before(new Date());
+    }
+
+    public static Claims obtenerClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    public static void validarRolToken(String token, String rolEsperado) {
+        Claims claims = obtenerClaims(token);
+        String rol = (String) claims.get("rol");
+
+        if (!rol.equalsIgnoreCase(rolEsperado)) {
+            System.out.println("Token inválido");
+            throw new RuntimeException("No autorizado");
+        }
     }
 }
