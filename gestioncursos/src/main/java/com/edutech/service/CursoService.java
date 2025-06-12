@@ -58,9 +58,10 @@ public class CursoService {
                 .orElseThrow(() -> new RuntimeException("Curso no encontrado con ID: " + idCurso));
     }
 
+    //TRELLO
     public Curso vincularCursoConInstructor(Integer usuarioId, Integer cursoId) {
         // Llamada REST al microservicio X para obtener instructor
-        String url = "http://microservicio-X/api/usuarios/{usuarioId}";
+        String url = "http://microservicio-x/api/usuarios/{usuarioId}";
         UsuarioDTO instructor = restTemplate.getForObject(url, UsuarioDTO.class, usuarioId);
         Curso curso = cursoRepository.findCursoByIdCurso(cursoId);
         if (instructor == null) {

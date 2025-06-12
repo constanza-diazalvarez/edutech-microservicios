@@ -17,6 +17,7 @@
         <module>progreso</module>
         <module>pago</module>
         <module>inscripcion</module>
+        <module>api-gateway</module>
     </modules>
 
     <properties>
@@ -37,7 +38,11 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
+    <dependency>
+        <groupId>net.datafaker</groupId>
+        <artifactId>datafaker</artifactId>
+        <version>2.3.0</version>
+    </dependency>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>

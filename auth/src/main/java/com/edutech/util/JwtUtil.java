@@ -8,7 +8,8 @@ import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
 import java.util.Date;
 
-public class JwtUtil {
+public class
+JwtUtil {
     private static final String SECRET_STRING = "clave1234clave1234clave1234clave1234";
     private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET_STRING.getBytes());
 
