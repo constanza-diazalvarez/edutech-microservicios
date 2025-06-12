@@ -6,16 +6,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "descuentos")
+@Table(name = "pagos")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Descuento {
+public class Pago {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idDescuento;
+    private Integer idPago;
 
-    private String codigo;
-    private Double porcentaje;
+    @Column(nullable = false)
+    private Integer idCliente;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name="id_descuento")
+    private Descuento descuento;
 }
-

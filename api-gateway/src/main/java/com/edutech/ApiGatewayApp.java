@@ -1,13 +1,11 @@
 package com.edutech;
 
-/**
- * Hello world!
- *
- */
-public class ApiGatewayApp
-{
-    public static void main( String[] args )
-    {
-        System.out.println( "Hello World!" );
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ApiGatewayApp {
+    public static void main( String[] args ) {
+        SpringApplication.run(ApiGatewayApp.class, args);
     }
 }

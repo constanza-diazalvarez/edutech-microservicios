@@ -1,4 +1,4 @@
-package com.edutech.util;
+package utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -8,7 +8,8 @@ import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
 import java.util.Date;
 
-public class JwtUtil {
+public class
+JwtUtil {
     private static final String SECRET_STRING = "clave1234clave1234clave1234clave1234";
     private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET_STRING.getBytes());
 
@@ -16,7 +17,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .setSubject(nombreUsuario)
                 .claim("rol", rol)
-                .claim("id", idUsuario)
+                .claim("idUsuario", idUsuario)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
@@ -39,6 +40,15 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
         return claims.get("rol", String.class);
+    }
+
+    public static Integer obtenerId(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("idUsuario", Integer.class);
     }
 
 
@@ -64,7 +74,6 @@ public class JwtUtil {
                 .getBody();
     }
 
-    //Revisar
     public static void validarRolToken(String token, String rolEsperado) {
         Claims claims = obtenerClaims(token);
         String rol = (String) claims.get("rol");

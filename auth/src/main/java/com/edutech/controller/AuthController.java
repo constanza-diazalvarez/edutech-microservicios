@@ -4,12 +4,12 @@ import com.edutech.dto.LoginRequest;
 import com.edutech.dto.LoginResponse;
 import com.edutech.model.Usuario;
 import com.edutech.service.UsuarioService;
-import com.edutech.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import utils.JwtUtil;
 
 import java.util.Optional;
 
@@ -25,6 +25,7 @@ public class AuthController {
         Optional<Usuario> usuario = usuarioService.findByNombre(loginRequest.getNombre());
         if (usuario.isPresent()) {
             Usuario usuarioActual = usuario.get();
+
             if (usuarioActual.getPassword().equals(loginRequest.getPassword())) {
                 String rol = usuarioActual.getRol().getRol();
                 Integer id = usuarioActual.getId();
@@ -32,7 +33,6 @@ public class AuthController {
                 return new LoginResponse(token, rol, id);
             }
         }
-
         throw new RuntimeException("Credenciales inválidas");
     }
 
@@ -40,5 +40,4 @@ public class AuthController {
     public Usuario registrarUsuario(@RequestBody Usuario usuario) {
         return usuarioService.save(usuario);
     }
-
 }
