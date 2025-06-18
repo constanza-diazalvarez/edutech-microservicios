@@ -4,6 +4,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -74,13 +77,19 @@ JwtUtil {
                 .getBody();
     }
 
-    public static void validarRolToken(String token, String rolEsperado) {
+    public static boolean validarRolToken(String token, String rolEsperado) {
         Claims claims = obtenerClaims(token);
         String rol = (String) claims.get("rol");
 
-        if (!rol.equalsIgnoreCase(rolEsperado)) {
-            System.out.println("Token inválido");
-            throw new RuntimeException("No autorizado");
+        return rol.equalsIgnoreCase(rolEsperado);
+    }
+
+    public static String obtenerToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
+        String token = header.replace("Bearer ", "");
+        return token;
     }
 }

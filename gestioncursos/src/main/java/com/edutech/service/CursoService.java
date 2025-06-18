@@ -5,10 +5,13 @@ import com.edutech.model.UsuarioDTO;
 import com.edutech.repository.CursoRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CursoService {
@@ -91,6 +94,14 @@ public class CursoService {
 
     public List<Curso> obtenerCursosPorPalabrasClave(String palabraClave) {
         return cursoRepository.findByNombreCursoContainingIgnoreCase(palabraClave);
+    }
+
+    public Curso obtenerCursoPorId(Integer idCurso) {
+        Optional<Curso> curso = cursoRepository.findById(idCurso);
+        if (curso.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado");
+        }
+        return curso.get();
     }
 }
 

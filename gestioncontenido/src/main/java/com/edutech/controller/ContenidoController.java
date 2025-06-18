@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-//@RequestMapping("/api/contenido")
 @RequestMapping("/contenido")
 public class ContenidoController {
     @Autowired
@@ -46,5 +45,15 @@ public class ContenidoController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error al actualizar el contenido");
         }
+    }
+
+    @GetMapping("/visualizar/contenido/{idContenido}")
+    public ResponseEntity<byte[]> visualizarContenido(@PathVariable("idContenido") Integer idContenido){
+        return contenidoService.visualizarContenido(idContenido);
+    }
+
+    @GetMapping("/curso/{idCurso}")
+    public ResponseEntity<List<Contenido>>  obtenerContenidoPorCurso(@PathVariable("idCurso") Integer idCurso){
+        return ResponseEntity.ok(contenidoService.obtenerPorIdCurso(idCurso));
     }
 }

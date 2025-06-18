@@ -20,8 +20,8 @@ public class Usuario {
     private Integer id;
 
     //quitar por duplicidad con gestion-usuarios
-    @Column(nullable = false)
-    private String nombre;
+    /*@Column(nullable = false)
+    private String nombre;*/
 
     @Column(nullable = false)
     private String correo;

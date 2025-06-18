@@ -2,42 +2,40 @@ package com.edutech.controller;
 
 import com.edutech.dto.LoginRequest;
 import com.edutech.dto.LoginResponse;
-import com.edutech.model.Usuario;
-import com.edutech.service.UsuarioService;
+import com.edutech.dto.UsuarioDTO;
+import com.edutech.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import utils.JwtUtil;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
+@AllArgsConstructor
 public class AuthController {
+    private final RestTemplate restTemplate;
 
     @Autowired
-    private UsuarioService usuarioService;
+    private AuthService authService;
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest loginRequest) {
-        Optional<Usuario> usuario = usuarioService.findByNombre(loginRequest.getNombre());
-        if (usuario.isPresent()) {
-            Usuario usuarioActual = usuario.get();
-
-            if (usuarioActual.getPassword().equals(loginRequest.getPassword())) {
-                String rol = usuarioActual.getRol().getRol();
-                Integer id = usuarioActual.getId();
-                String token = JwtUtil.generarToken(usuarioActual.getNombre(), rol, usuarioActual.getId());
-                return new LoginResponse(token, rol, id);
-            }
-        }
-        throw new RuntimeException("Credenciales inválidas");
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
+        return ResponseEntity.ok(authService.login(loginRequest));
     }
 
     @PostMapping("/registrar")
-    public Usuario registrarUsuario(@RequestBody Usuario usuario) {
-        return usuarioService.save(usuario);
+    public ResponseEntity<?> registrarUsuario(@RequestBody UsuarioDTO usuarioDto) {
+        return authService.registrar(usuarioDto);
+    }
+
+    @PatchMapping("/perfil/editar")
+    public ResponseEntity<?> modificarUsuario(
+            @RequestBody Map<String, Object> usuarioMap,
+            HttpServletRequest request) {
+        return authService.modificarUsuario(usuarioMap, request);
     }
 }

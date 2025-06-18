@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-//@RequestMapping("/api/cursos")
 @RequestMapping("/cursos")
 public class CursoController {
 
@@ -76,6 +75,11 @@ public class CursoController {
     @GetMapping("/buscar/palabra-clave/{palabra}")
     public List<Curso> buscarPalabraClave(@PathVariable("palabra") String palabra) {
         return cursoService.obtenerCursosPorPalabrasClave(palabra);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Curso> obtenerCursoPorId(@PathVariable Integer idCurso) {
+        return ResponseEntity.ok(cursoService.obtenerCursoPorId(idCurso));
     }
 
 }

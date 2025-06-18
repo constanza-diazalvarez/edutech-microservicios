@@ -2,17 +2,22 @@ package com.edutech.controller;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import utils.JwtUtil;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
+@AllArgsConstructor
 public class ApiGatewayController {
-    private final RestTemplate restTemplate = new RestTemplate(); //RestTemplate es un cliente http que se usa para enviar solicitudes a cada microservicio
+    private final RestTemplate restTemplate; //RestTemplate es un cliente http que se usa para enviar solicitudes a cada microservicio
 
     //aqui se almacenan los microservicios con sus url
     private final Map<String, String> microservicios = new HashMap<>();
@@ -75,12 +80,7 @@ public class ApiGatewayController {
 
         //validar token para todos los ms, menos auth
         if(!servicio.equalsIgnoreCase("auth")){
-            String token = extraerToken(request);
-            if(token == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("El token no existe");
-            }
-
+            String token = JwtUtil.obtenerToken(request);
             try {
                 if(JwtUtil.estaExpirado(token)){
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -158,12 +158,7 @@ public class ApiGatewayController {
             @RequestHeader HttpHeaders headers,
             HttpServletRequest request
     ){
-        String token = extraerToken(request);
-        if(token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("El token no existe");
-        }
-
+        String token = JwtUtil.obtenerToken(request);
         try {
             if(JwtUtil.estaExpirado(token)){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -182,23 +177,27 @@ public class ApiGatewayController {
                     .body("Error al validar el token: " + e.getMessage());
         }
 
-        Integer idUsuario = JwtUtil.obtenerId(token);
-        String pagoUrl = microservicios.get("pago") + "/procesar-pago/"  + idUsuario;
+        String pagoUrl = microservicios.get("pago") + "/procesar-pago";
 
         if (codigoDescuento != null && !codigoDescuento.isEmpty()) {
             pagoUrl += "?codigoDescuento=" + codigoDescuento;
         }
 
-        ResponseEntity<String> respuestaPago = restTemplate.exchange(
-                pagoUrl,
-                HttpMethod.POST,
-                new HttpEntity<>(codigoDescuento, headers),
-                String.class
-        );
+        try {
+            ResponseEntity<String> respuestaPago = restTemplate.exchange(
+                    pagoUrl,
+                    HttpMethod.POST,
+                    new HttpEntity<>(codigoDescuento, headers),
+                    String.class
+            );
 
-        if(!respuestaPago.getStatusCode().equals(HttpStatus.OK)){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error al validar el procesar pago");
+            if (!respuestaPago.getStatusCode().equals(HttpStatus.OK)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Error al validar el procesar pago");
+            }
+
+        } catch (HttpClientErrorException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         }
 
         String inscripcionUrl = microservicios.get("inscripcion") + "/"  + idCurso;
@@ -220,11 +219,52 @@ public class ApiGatewayController {
                 .body(respuestaInscripcion.getBody());
     }
 
-    private String extraerToken(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.replace("Bearer ", "");
+    @PatchMapping("/api/usuarios/perfil/editar")
+    public ResponseEntity<?> modificarUsuario(@RequestHeader("Authorization") String authHeadear,
+                                              @RequestBody Map<String, Object> body,
+                                              HttpServletRequest request){
+        String token = JwtUtil.obtenerToken(request);
+        if (!JwtUtil.validarRolToken(token, "ESTUDIANTE")){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
-        return null;
+
+        Map<String, Object> bodyAuth = new HashMap<>();
+        Map<String, Object> bodyUsuario = new HashMap<>();
+
+        if (body.containsKey("correo")){
+            bodyAuth.put("correo", body.get("correo"));
+        }
+        if (body.containsKey("password")){
+            bodyAuth.put("password", body.get("password"));
+        }
+        if (body.containsKey("nombre")){
+            bodyUsuario.put("nombre", body.get("nombre"));
+        }
+        HttpHeaders nuevosHeaders = new HttpHeaders();
+        nuevosHeaders.setContentType(MediaType.APPLICATION_JSON);
+        nuevosHeaders.set("Authorization", "Bearer " + token);
+
+        if (!bodyAuth.isEmpty()) {
+            HttpEntity <Map<String, Object>> entidadAuth = new HttpEntity<>(bodyAuth, nuevosHeaders);
+            /*httpentity representa una peticion http y recibe dos parametros, body y header
+            * <Map<String, Object>> indica que el body es un JSON con formato de clave-valor*/
+            restTemplate.exchange(
+                    //→VALIDAR URL←
+                    microservicios.get("auth") + "/perfil/editar",
+                    HttpMethod.PATCH,
+                    entidadAuth,
+                    Void.class);
+
+        }
+        if (!bodyUsuario.isEmpty()) {
+            HttpEntity <Map<String, Object>> entidadUsuario = new HttpEntity<>(bodyUsuario, nuevosHeaders);
+            restTemplate.exchange(
+                    //→VALIDAR URL←
+                    microservicios.get("usuarios") + "/perfil/editar",
+                    HttpMethod.PATCH,
+                    entidadUsuario,
+                    Void.class);
+        }
+        return  ResponseEntity.ok().build(); //codigo 200
     }
 }

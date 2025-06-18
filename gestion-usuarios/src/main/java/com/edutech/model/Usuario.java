@@ -16,26 +16,27 @@ import lombok.NoArgsConstructor;
 public class Usuario {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    /*LO PASO DESDE AUTH, YA NO NECESITO QUE SE GENERE AUTOMATICAMENTE
+    @GeneratedValue(strategy = GenerationType.IDENTITY)*/
     private Integer id;
 
     @Column(nullable = false)
     private String nombre;
 
-    //sacar
+    /*
     @Column(nullable = false)
-    private String correo;
+    private String correo;*/
 
-    //sacar
+    /*
     @Column(nullable = false)
-    private String password;
+    private String password;*/
 
-    //sacar
+    /*
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id", nullable = false)
-    private Rol rol;
+    private Rol rol;*/
 
     @Column(nullable = false)
-    private boolean activo = true;
+    private String estado;
 
 }

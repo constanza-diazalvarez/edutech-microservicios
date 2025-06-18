@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface InscripcionRepository extends JpaRepository<Inscripcion, Integer> {
     List<Inscripcion> findByIdUsuario(Integer idUsuario);
     Optional<Inscripcion> findByIdUsuarioAndIdCurso(Integer idUsuario, Integer idCurso);
+    Boolean existsByIdUsuarioAndIdCurso(Integer idUsuario, Integer idCurso);
 }

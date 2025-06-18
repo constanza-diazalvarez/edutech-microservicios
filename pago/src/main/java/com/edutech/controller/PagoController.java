@@ -17,12 +17,12 @@ public class PagoController {
     @Autowired
     private PagoService pagoService;
 
-    @PostMapping("/procesar-pago/{idUsuario}")
+    @PostMapping("/procesar-pago")
     public Pago generarPago(
-            @PathVariable("idUsuario") Integer idsuario,
+            HttpServletRequest request,
             @RequestParam(value = "codigoDescuento", required = false) String codigoDescuento
     ){
-        return pagoService.generarPago(idsuario, codigoDescuento);
+        return pagoService.generarPago(request, codigoDescuento);
     }
 
     /*
