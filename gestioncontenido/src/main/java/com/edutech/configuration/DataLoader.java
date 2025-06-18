@@ -1,8 +1,8 @@
-package com.edutech;
+package com.edutech.configuration;
 
 import com.edutech.model.Contenido;
 import com.edutech.repository.ContenidoRepository;
-import com.github.javafaker.Faker;
+import net.datafaker.Faker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -19,8 +19,8 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Crear instancia de Faker con idioma español (método correcto)
-        Faker faker = new Faker(Locale.forLanguageTag("es"));
+        // Crear instancia de Faker con idioma español
+        Faker faker = new Faker(new Locale("es"));
 
         // Generar contenido de prueba
         for (int i = 0; i < 20; i++) {
@@ -44,8 +44,6 @@ public class DataLoader implements CommandLineRunner {
             contenido.setIdCurso(faker.number().numberBetween(1, 10));
 
             contenidoRepository.save(contenido);
-
-            System.out.println("Creado contenido: " + fileName + " para curso: " + contenido.getIdCurso());
         }
 
         System.out.println("datos generados yei:)");
