@@ -2,7 +2,7 @@ package com.edutech.service;
 
 import com.edutech.model.Contenido;
 import com.edutech.repository.ContenidoRepository;
-import com.github.javafaker.Faker;
+import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,7 +62,7 @@ public class ContenidoServiceTest {
 
         when(contenidoRepository.save(any(Contenido.class))).thenReturn(contenidoGuardado);
 
-        // Ejecutar el método
+        // Ejecutar el metodo
         Contenido resultado = contenidoService.guardarContenido(cursoId, mockFile);
 
         // Verificaciones
@@ -99,7 +99,7 @@ public class ContenidoServiceTest {
         when(contenidoRepository.findById(id)).thenReturn(Optional.of(contenidoExistente));
         when(contenidoRepository.save(any(Contenido.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Ejecutar el método
+        // Ejecutar el metodo
         Contenido resultado = contenidoService.actualizarContenido(id, nuevoCursoId, mockFile);
 
         // Verificaciones
@@ -130,7 +130,7 @@ public class ContenidoServiceTest {
         when(contenidoRepository.findById(id)).thenReturn(Optional.of(contenidoExistente));
         when(contenidoRepository.save(any(Contenido.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Ejecutar el método sin archivo
+        // Ejecutar el metodo sin archivo
         Contenido resultado = contenidoService.actualizarContenido(id, nuevoCursoId, null);
 
         // Verificaciones - solo debe cambiar el curso ID
@@ -156,7 +156,7 @@ public class ContenidoServiceTest {
 
         when(contenidoRepository.findAll()).thenReturn(contenidos);
 
-        // Ejecutar el método
+        // Ejecutar el metodo
         List<Contenido> resultado = contenidoService.obtenerTodoContenido();
 
         // Verificaciones
@@ -177,7 +177,7 @@ public class ContenidoServiceTest {
 
         when(contenidoRepository.findByIdCurso(cursoId)).thenReturn(contenidos);
 
-        // Ejecutar el método
+        // Ejecutar el metodo
         List<Contenido> resultado = contenidoService.obtenerPorIdCurso(cursoId);
 
         // Verificaciones
