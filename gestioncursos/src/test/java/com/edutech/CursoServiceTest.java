@@ -6,10 +6,9 @@ import com.edutech.repository.CursoRepository;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
@@ -18,21 +17,26 @@ import java.util.Locale;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+
+//Estructura de un test
+//Arrange (Preparar): Configuración inicial y datos de prueba
+//Act (Actuar): Ejecución del metodo a probar
+//Assert (Verificar): Comprobación de resultados
+
+
+@SpringBootTest
 public class CursoServiceTest {
 
-    @Mock
+    @MockBean
     private CursoRepository cursoRepository;
 
-    @Mock
+    @MockBean
     private RestTemplate restTemplate;
 
-    @InjectMocks
+    @Autowired
     private CursoService cursoService;
 
     private Faker faker;
@@ -66,7 +70,7 @@ public class CursoServiceTest {
     void crearCurso_ShouldSaveNewCourse() {
         // Arrange
         Curso cursoNuevo = crearCursoFake();
-        cursoNuevo.setIdCurso(null); // Para simular nuevo curso
+        cursoNuevo.setIdCurso(null);
 
         when(cursoRepository.save(any(Curso.class))).thenReturn(cursoNuevo);
 
@@ -241,7 +245,7 @@ public class CursoServiceTest {
         verify(cursoRepository, times(1)).findByCategoria(categoria);
     }
 
-    // Métodos auxiliares para crear objetos de prueba
+    // Métodos auxiliares
     private Curso crearCursoFake() {
         return crearCursoFake(faker.bool().bool() ? faker.number().numberBetween(1, 100) : null);
     }
