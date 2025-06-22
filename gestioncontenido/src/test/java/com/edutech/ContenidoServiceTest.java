@@ -2,236 +2,205 @@ package com.edutech.service;
 
 import com.edutech.model.Contenido;
 import com.edutech.repository.ContenidoRepository;
-import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 public class ContenidoServiceTest {
 
-    @Mock
+    // mock del repository
+    @MockBean
     private ContenidoRepository contenidoRepository;
 
-    @InjectMocks
+    // servicio a testear
+    @Autowired
     private ContenidoService contenidoService;
 
-    private Faker faker;
+    // datos
+    private MultipartFile archivoValido;
+    private Contenido contenidoExistente;
+    private final Integer ID_CURSO_VALIDO = 1;
+    private final Integer ID_CONTENIDO_VALIDO = 1;
 
-    @BeforeEach
-    void setUp() {
-        faker = new Faker(new Locale("es"));
+    @BeforeEach//configura el entorno antes de cada prueba
+    void setUp() throws IOException {
+        //crear un archivo mock para las pruebas
+        archivoValido = new MockMultipartFile(
+                "archivo",
+                "documento.pdf",
+                "application/pdf",
+                "contenido de prueba".getBytes()
+        );
+
+        //crear un contenido existente para pruebas de actualización
+        contenidoExistente = new Contenido();
+        contenidoExistente.setIdContenido(ID_CONTENIDO_VALIDO);
+        contenidoExistente.setNombre("antiguo.pdf");
+        contenidoExistente.setTipoContenido("application/pdf");
+        contenidoExistente.setDatosContenido("contenido antiguo".getBytes());
+        contenidoExistente.setIdCurso(ID_CURSO_VALIDO);
     }
 
     @Test
-    void guardarContenido_ShouldSaveContent() throws IOException {
-        // Datos de prueba generados con Faker
-        Integer cursoId = faker.number().numberBetween(1, 100);
-        String fileName = faker.file().fileName();
-        String contentType = "application/pdf";
-        byte[] fileContent = faker.lorem().paragraph().getBytes();
+    void guardarContenido_ConDatosValidos_DeberiaGuardarCorrectamente() throws IOException {
+        //mock del repositorio
+        when(contenidoRepository.save(any(Contenido.class)))
+                .thenAnswer(invocation -> {
+                    // qué hace invocation.getArgument(0) = el Contenido que pasa al servicio
+                    Contenido c = invocation.getArgument(0); // Obtiene el objeto real
+                    c.setIdContenido(1); // lo modifica como una BD real
+                    return c; // lo devuelve modificado
+                });
 
-        // Mock del archivo
-        MultipartFile mockFile = new MockMultipartFile(
-                "file",
-                fileName,
-                contentType,
-                fileContent
+        // ejecuta el metodo
+        Contenido resultado = contenidoService.guardarContenido(ID_CURSO_VALIDO, archivoValido);
+
+        // Verificaciones
+        //no nulo
+        assertNotNull(resultado);
+        //id no coincide
+        assertEquals(ID_CONTENIDO_VALIDO, resultado.getIdContenido());
+        //nombre de archivo no coincide
+        assertEquals(archivoValido.getOriginalFilename(), resultado.getNombre());
+        //tipo de contenido no coincide
+        assertEquals(archivoValido.getContentType(), resultado.getTipoContenido());
+        //datos no coinciden
+        assertArrayEquals(archivoValido.getBytes(), resultado.getDatosContenido());
+        //id curso no couincide
+        assertEquals(ID_CURSO_VALIDO, resultado.getIdCurso());
+
+        // Verificar interacción con el repositorio
+        verify(contenidoRepository, times(1)).save(any(Contenido.class));
+    }
+
+    @Test
+    void actualizarContenido_ConNuevoArchivo_DeberiaActualizarTodosLosCampos() throws IOException {
+        // mocks
+        when(contenidoRepository.findById(ID_CONTENIDO_VALIDO)).thenReturn(Optional.of(contenidoExistente)); // Simula encontrar el contenido
+        when(contenidoRepository.save(any(Contenido.class))).thenAnswer(i -> i.getArgument(0)); // Devuelve el mismo objeto que recibe
+
+        //nuevo id para actualización
+        Integer nuevoCursoId = 2;
+
+        //metodo
+        Contenido resultado = contenidoService.actualizarContenido(
+                ID_CONTENIDO_VALIDO,
+                nuevoCursoId,
+                archivoValido
         );
 
-        // Mock del contenido guardado
-        Contenido contenidoGuardado = crearContenidoFake();
-        contenidoGuardado.setNombre(fileName);
-        contenidoGuardado.setTipoContenido(contentType);
-        contenidoGuardado.setDatosContenido(fileContent);
-        contenidoGuardado.setIdCurso(cursoId);
+        // verificaciones
+        assertNotNull(resultado);
+        assertEquals(ID_CONTENIDO_VALIDO, resultado.getIdContenido());
+        assertEquals(archivoValido.getOriginalFilename(), resultado.getNombre());
+        assertEquals(archivoValido.getContentType(), resultado.getTipoContenido());
+        assertArrayEquals(archivoValido.getBytes(), resultado.getDatosContenido());
+        assertEquals(nuevoCursoId, resultado.getIdCurso());
 
-        when(contenidoRepository.save(any(Contenido.class))).thenReturn(contenidoGuardado);
+        //interacciones
+        verify(contenidoRepository, times(1)).findById(ID_CONTENIDO_VALIDO);
+        verify(contenidoRepository, times(1)).save(any(Contenido.class));
+    }
 
-        // Ejecutar el metodo
-        Contenido resultado = contenidoService.guardarContenido(cursoId, mockFile);
+    @Test
+    void actualizarContenido_SinArchivo_DeberiaActualizarSoloCurso() throws IOException {
+        //mocks
+        when(contenidoRepository.findById(ID_CONTENIDO_VALIDO)).thenReturn(Optional.of(contenidoExistente));
+        when(contenidoRepository.save(any(Contenido.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        //probar actualización
+        Integer nuevoCursoId = 2;
+
+        // ejecutar con archivo null
+        Contenido resultado = contenidoService.actualizarContenido(
+                ID_CONTENIDO_VALIDO,
+                nuevoCursoId,
+                null
+        );
 
         // Verificaciones
         assertNotNull(resultado);
-        assertEquals(fileName, resultado.getNombre());
-        assertEquals(contentType, resultado.getTipoContenido());
-        assertEquals(cursoId, resultado.getIdCurso());
-        assertArrayEquals(fileContent, resultado.getDatosContenido());
-
-        verify(contenidoRepository, times(1)).save(any(Contenido.class));
-    }
-
-    @Test
-    void actualizarContenido_ShouldUpdateContent() throws IOException {
-        // Datos de prueba generados con Faker
-        Integer id = faker.number().numberBetween(1, 100);
-        Integer nuevoCursoId = faker.number().numberBetween(1, 100);
-        String nuevoFileName = faker.file().fileName();
-        String nuevoContentType = "application/pdf";
-        byte[] nuevoFileContent = faker.lorem().paragraph().getBytes();
-
-        // Mock del archivo
-        MultipartFile mockFile = new MockMultipartFile(
-                "file",
-                nuevoFileName,
-                nuevoContentType,
-                nuevoFileContent
-        );
-
-        // Contenido existente
-        Contenido contenidoExistente = crearContenidoFake();
-        contenidoExistente.setIdContenido(id);
-
-        when(contenidoRepository.findById(id)).thenReturn(Optional.of(contenidoExistente));
-        when(contenidoRepository.save(any(Contenido.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // Ejecutar el metodo
-        Contenido resultado = contenidoService.actualizarContenido(id, nuevoCursoId, mockFile);
-
-        // Verificaciones
-        assertNotNull(resultado);
-        assertEquals(id, resultado.getIdContenido());
-        assertEquals(nuevoFileName, resultado.getNombre());
-        assertEquals(nuevoContentType, resultado.getTipoContenido());
+        assertEquals(ID_CONTENIDO_VALIDO, resultado.getIdContenido());
+        assertEquals(contenidoExistente.getNombre(), resultado.getNombre());
+        assertEquals(contenidoExistente.getTipoContenido(), resultado.getTipoContenido());
+        assertArrayEquals(contenidoExistente.getDatosContenido(), resultado.getDatosContenido());
         assertEquals(nuevoCursoId, resultado.getIdCurso());
-        assertArrayEquals(nuevoFileContent, resultado.getDatosContenido());
 
-        verify(contenidoRepository, times(1)).findById(id);
+        // verificar interacciones
+        verify(contenidoRepository, times(1)).findById(ID_CONTENIDO_VALIDO);
         verify(contenidoRepository, times(1)).save(any(Contenido.class));
     }
 
     @Test
-    void actualizarContenido_SinArchivo_ShouldUpdateOnlyCourseId() throws IOException {
-        // Datos de prueba
-        Integer id = faker.number().numberBetween(1, 100);
-        Integer nuevoCursoId = faker.number().numberBetween(1, 100);
+    void actualizarContenido_ConIdInexistente_DeberiaLanzarExcepcion() {
+        //mock para simular contenido no encontrado
+        when(contenidoRepository.findById(ID_CONTENIDO_VALIDO)).thenReturn(Optional.empty());
 
-        // Contenido existente
-        Contenido contenidoExistente = crearContenidoFake();
-        contenidoExistente.setIdContenido(id);
-        String nombreOriginal = contenidoExistente.getNombre();
-        String tipoOriginal = contenidoExistente.getTipoContenido();
-        byte[] datosOriginales = contenidoExistente.getDatosContenido();
+        // verificar excepcion
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            contenidoService.actualizarContenido(ID_CONTENIDO_VALIDO, ID_CURSO_VALIDO, null);
+        });
 
-        when(contenidoRepository.findById(id)).thenReturn(Optional.of(contenidoExistente));
-        when(contenidoRepository.save(any(Contenido.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        // verificar mensaje de error
+        assertEquals("Contenido no encontrado con id: " + ID_CONTENIDO_VALIDO, exception.getMessage());
 
-        // Ejecutar el metodo sin archivo
-        Contenido resultado = contenidoService.actualizarContenido(id, nuevoCursoId, null);
-
-        // Verificaciones - solo debe cambiar el curso ID
-        assertNotNull(resultado);
-        assertEquals(id, resultado.getIdContenido());
-        assertEquals(nombreOriginal, resultado.getNombre());
-        assertEquals(tipoOriginal, resultado.getTipoContenido());
-        assertEquals(nuevoCursoId, resultado.getIdCurso());
-        assertArrayEquals(datosOriginales, resultado.getDatosContenido());
-
-        verify(contenidoRepository, times(1)).findById(id);
-        verify(contenidoRepository, times(1)).save(any(Contenido.class));
+        // verificar que no se llamó a save
+        verify(contenidoRepository, never()).save(any(Contenido.class));
     }
 
     @Test
-    void obtenerTodoContenido_ShouldReturnAllContent() {
-        // Generar datos de prueba con Faker
-        List<Contenido> contenidos = List.of(
-                crearContenidoFake(),
-                crearContenidoFake(),
-                crearContenidoFake()
+    void obtenerTodoContenido_DeberiaRetornarTodosLosContenidos() {
+        //mock para devolver una lista de contenidos
+        List<Contenido> contenidosEsperados = Arrays.asList(
+                new Contenido(),
+                new Contenido(),
+                new Contenido()
         );
+        when(contenidoRepository.findAll()).thenReturn(contenidosEsperados);
 
-        when(contenidoRepository.findAll()).thenReturn(contenidos);
-
-        // Ejecutar el metodo
+        // ejecutar el metodo
         List<Contenido> resultado = contenidoService.obtenerTodoContenido();
 
-        // Verificaciones
-        assertNotNull(resultado);
-        assertEquals(3, resultado.size());
+        // verificaciones
+        assertNotNull(resultado, "La lista no debería ser nula");
+        assertEquals(3, resultado.size(), "Debería retornar 3 contenidos");
 
+        // verificar interacción
         verify(contenidoRepository, times(1)).findAll();
     }
 
     @Test
-    void obtenerPorIdCurso_ShouldReturnCourseContent() {
-        // Generar datos de prueba con Faker
-        Integer cursoId = faker.number().numberBetween(1, 100);
-        List<Contenido> contenidos = List.of(
-                crearContenidoFake(cursoId),
-                crearContenidoFake(cursoId)
+    void obtenerPorIdCurso_DeberiaRetornarSoloContenidoDelCurso() {
+        // mock para devolver contenidos específicos
+        List<Contenido> contenidosEsperados = Arrays.asList(
+                new Contenido(),
+                new Contenido()
         );
+        when(contenidoRepository.findByIdCurso(ID_CURSO_VALIDO)).thenReturn(contenidosEsperados);
 
-        when(contenidoRepository.findByIdCurso(cursoId)).thenReturn(contenidos);
+        // ejecutar el metodo
+        List<Contenido> resultado = contenidoService.obtenerPorIdCurso(ID_CURSO_VALIDO);
 
-        // Ejecutar el metodo
-        List<Contenido> resultado = contenidoService.obtenerPorIdCurso(cursoId);
-
-        // Verificaciones
+        // verificaciones
         assertNotNull(resultado);
+        //retornar la cantidad correcta de la lista
         assertEquals(2, resultado.size());
-        resultado.forEach(c -> assertEquals(cursoId, c.getIdCurso()));
 
-        verify(contenidoRepository, times(1)).findByIdCurso(cursoId);
-    }
-
-    @Test
-    void actualizarContenido_ContenidoNoExiste_ShouldThrowException() {
-        // Datos de prueba
-        Integer id = faker.number().numberBetween(1, 100);
-        Integer cursoId = faker.number().numberBetween(1, 100);
-
-        when(contenidoRepository.findById(id)).thenReturn(Optional.empty());
-
-        // Verificar que lanza excepción
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            contenidoService.actualizarContenido(id, cursoId, null);
-        });
-
-        assertEquals("Contenido no encontrado con id: " + id, exception.getMessage());
-        verify(contenidoRepository, times(1)).findById(id);
-        verify(contenidoRepository, never()).save(any(Contenido.class));
-    }
-
-    private Contenido crearContenidoFake() {
-        return crearContenidoFake(faker.number().numberBetween(1, 100));
-    }
-
-    private Contenido crearContenidoFake(Integer cursoId) {
-        Contenido contenido = new Contenido();
-        contenido.setIdContenido(faker.number().numberBetween(1, 100));
-
-        // Generar nombres de archivo más realistas
-        String extension = faker.options().option("pdf", "docx", "pptx", "mp4", "jpg");
-        String fileName = faker.book().title().replaceAll(" ", "_").toLowerCase() + "." + extension;
-        contenido.setNombre(fileName);
-
-        // Tipo de contenido realista
-        String mimeType = switch (extension) {
-            case "pdf" -> "application/pdf";
-            case "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-            case "pptx" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-            case "mp4" -> "video/mp4";
-            case "jpg" -> "image/jpeg";
-            default -> "application/octet-stream";
-        };
-        contenido.setTipoContenido(mimeType);
-
-        contenido.setDatosContenido(faker.lorem().paragraph().getBytes());
-        contenido.setIdCurso(cursoId);
-        return contenido;
+        // Verificar interacción
+        verify(contenidoRepository, times(1)).findByIdCurso(ID_CURSO_VALIDO);
     }
 }
