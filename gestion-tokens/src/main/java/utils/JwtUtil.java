@@ -22,7 +22,7 @@ JwtUtil {
                 .claim("rol", rol)
                 .claim("idUsuario", idUsuario)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .setExpiration(new Date(System.currentTimeMillis() + 5000 * 60 * 60))
                 .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
                 .compact();
     }

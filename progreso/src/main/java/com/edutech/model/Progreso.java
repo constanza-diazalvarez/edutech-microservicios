@@ -1,20 +1,25 @@
 package com.edutech.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 @Entity
 public class Progreso {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer idProgreso;
 
-    private Integer estudianteId;
-    private Integer cursoId;
-    private Integer porcentaje;
+    private Integer idEstudiante;
+    private Integer idCurso;
+
+    @ElementCollection
+    private List<Integer> idContenidoCompleto;
+
+    @ElementCollection
+    private List<Integer> idContenidoVisualizado;
+    private double porcentaje;
 }
 

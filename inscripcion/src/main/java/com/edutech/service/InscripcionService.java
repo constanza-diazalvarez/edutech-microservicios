@@ -5,7 +5,11 @@ import com.edutech.dto.CursoConContenidoDTO;
 import com.edutech.dto.CursoDTO;
 import com.edutech.modelo.Inscripcion;
 import com.edutech.repository.InscripcionRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -49,7 +53,12 @@ public class InscripcionService {
         return inscripcionRepository.save(inscripcion);
     }
 
-    public List<CursoConContenidoDTO> obtenerCursosPorUsuario(Integer idUsuario) {
+    public List<CursoConContenidoDTO> obtenerCursosPorUsuario(Integer idUsuario, HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+         HttpHeaders headers = new HttpHeaders();
+         headers.add("Authorization", "Bearer " + token);
+         HttpEntity<Void> entity = new HttpEntity<>(headers); //como es un get no hay body, por eso es void
+
         List<Inscripcion> inscripciones = obtenerInscripcionesPorUsuario(idUsuario);
         List<CursoConContenidoDTO> misCursos = new ArrayList<>();
 
@@ -57,13 +66,17 @@ public class InscripcionService {
             Integer idCurso = inscripcion.getIdCurso();
 
             //↓aqui esta EL CURSO por inscripcion
-            ResponseEntity<CursoDTO> curso = restTemplate.getForEntity(
-                    "http://localhost:8080/api/curso/" + idCurso,
+            ResponseEntity<CursoDTO> curso = restTemplate.exchange(
+                    "http://localhost:8080/api/cursos/" + idCurso,
+                    HttpMethod.GET,
+                    entity,
                     CursoDTO.class);
 
             //↓aqui estan todos los archivos que representan el contenido de EL CURSO
-            ResponseEntity<ContenidoDTO[]> respuestaContenido = restTemplate.getForEntity(
+            ResponseEntity<ContenidoDTO[]> respuestaContenido = restTemplate.exchange(
                     "http://localhost:8080/api/contenido/curso/" + idCurso,
+                    HttpMethod.GET,
+                    entity,
                     ContenidoDTO[].class//no me deja hacer: List<CursoConContenidoDTO>.class porque se pierde el <CursoConContenidoDTO> → equivalente a List.class
             );
             List<ContenidoDTO> contenido = Arrays.asList(respuestaContenido.getBody());
@@ -71,6 +84,8 @@ public class InscripcionService {
             CursoConContenidoDTO cursoConContenidoDTO = new CursoConContenidoDTO();
             cursoConContenidoDTO.setCurso(curso.getBody());
             cursoConContenidoDTO.setContenido(contenido);
+
+            misCursos.add(cursoConContenidoDTO);
         }
         return misCursos;
     }

@@ -34,20 +34,20 @@ public class InscripcionController {
 
     @GetMapping("/mis-cursos")
     public ResponseEntity<List<CursoConContenidoDTO>> obtenerCursosPorUsuario(HttpServletRequest request){
-        String token = request.getHeader("Authorization");
+        String token = request.getHeader("Authorization").replace("Bearer ", "");
         JwtUtil.validarToken(token, "ESTUDIANTE");
         Integer idUsuario = JwtUtil.obtenerIdUsuario(token);
 
-        List<CursoConContenidoDTO> cursos = inscripcionService.obtenerCursosPorUsuario(idUsuario);
+        List<CursoConContenidoDTO> cursos = inscripcionService.obtenerCursosPorUsuario(idUsuario, request);
         return ResponseEntity.ok(cursos);
 
     }
 
-    @GetMapping("/mis-cursos/curso/{idCurso}/contenido/{idContenido")
+    @GetMapping("/mis-cursos/curso/{idCurso}/contenido/{idContenido}")
     public ResponseEntity<String> accederContenido(HttpServletRequest request,
                                                  @PathVariable("idCurso") Integer idCurso,
                                                  @PathVariable("idContenido") Integer idContenido){
-        String token = request.getHeader("Authorization");
+        String token = request.getHeader("Authorization").replace("Bearer ", "");
         JwtUtil.validarToken(token, "ESTUDIANTE");
         Integer idUsuario = JwtUtil.obtenerIdUsuario(token);
 

@@ -52,8 +52,14 @@ public class ContenidoController {
         return contenidoService.visualizarContenido(idContenido);
     }
 
+    @GetMapping("/traer-contenido/{idContenido}")
+    public ResponseEntity<Contenido> traerContenido(@PathVariable("idContenido") Integer idContenido){
+        return contenidoService.traerContenido(idContenido);
+    }
+
     @GetMapping("/curso/{idCurso}")
     public ResponseEntity<List<Contenido>>  obtenerContenidoPorCurso(@PathVariable("idCurso") Integer idCurso){
         return ResponseEntity.ok(contenidoService.obtenerPorIdCurso(idCurso));
     }
+
 }

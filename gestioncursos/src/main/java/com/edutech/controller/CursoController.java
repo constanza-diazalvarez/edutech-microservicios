@@ -77,8 +77,8 @@ public class CursoController {
         return cursoService.obtenerCursosPorPalabrasClave(palabra);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Curso> obtenerCursoPorId(@PathVariable Integer idCurso) {
+    @GetMapping("/{idCurso}")
+    public ResponseEntity<Curso> obtenerCursoPorId(@PathVariable("idCurso") Integer idCurso) {
         return ResponseEntity.ok(cursoService.obtenerCursoPorId(idCurso));
     }
 

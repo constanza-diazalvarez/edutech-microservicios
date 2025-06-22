@@ -23,6 +23,7 @@ public class ContenidoService {
         this.contenidoRepository = contenidoRepository;
     }
 
+
     @Transactional
     public Contenido guardarContenido(Integer cursoId, MultipartFile contenido) throws IOException {
         Contenido nuevoContenido = new Contenido();
@@ -56,6 +57,7 @@ public class ContenidoService {
         return contenidoRepository.findAll();
     }
 
+    @Transactional
     public List<Contenido> obtenerPorIdCurso(Integer idCurso) {
         return contenidoRepository.findByIdCurso(idCurso);
     }
@@ -99,5 +101,14 @@ public class ContenidoService {
                 * Es util para evitar errores en caso de que la extencion no este en la lista del switch
                 *  MIME types son etiquetas estandar que indican el formato del archivo*/
         }
+
+
+    }
+    public ResponseEntity<Contenido> traerContenido(Integer idContenido){
+        Optional<Contenido> c =  contenidoRepository.findById(idContenido);
+        if (c.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado");
+        }
+        return ResponseEntity.ok(c.get());
     }
 }

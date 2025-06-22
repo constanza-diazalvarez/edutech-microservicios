@@ -1,5 +1,8 @@
 package com.edutech.dto;
 
+import lombok.Data;
+
+@Data
 public class ContenidoDTO {
     private Integer idContenido;
     private String nombre;

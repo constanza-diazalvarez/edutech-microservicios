@@ -69,8 +69,8 @@ public class ApiGatewayController {
             *               // hacer algo con el header
             *           }
             */
-            @RequestBody(required = false) String body, //el body pordria no existir como en un GET
-            @RequestHeader HttpHeaders headers
+            @RequestBody(required = false) String body //el body pordria no existir como en un GET
+            //@RequestHeader HttpHeaders headers
     ) {
         //verifica si el servicio existe en el hashmap
         if(!microservicios.containsKey(servicio)) {
@@ -121,7 +121,13 @@ public class ApiGatewayController {
          */
 
         HttpMethod metodo = HttpMethod.valueOf(request.getMethod()); //obtiene el metodo http (ej: GET, POST, PUT, DELETE, etc). Si yo tengo el metodo lo puedo reenviar a la microservicio de destino
+
+        //headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", request.getHeader("Authorization"));
         headers.setContentType(MediaType.APPLICATION_JSON);
+
         /*↑uno de los headers es Autorization por donde pasa el token, pero otro es Content-Type
         * por eso se le indica al header que el cuerpo(body) es de tipo json
         * Content-Type: application/json
@@ -205,6 +211,7 @@ public class ApiGatewayController {
         HttpHeaders nuevosHeaders = new HttpHeaders();
         nuevosHeaders.setContentType(MediaType.APPLICATION_JSON);
         nuevosHeaders.set("Authorization", "Bearer " + token);
+
         HttpEntity<String> entity = new HttpEntity<>(nuevosHeaders);
 
         ResponseEntity<String> respuestaInscripcion = restTemplate.exchange(
@@ -267,4 +274,63 @@ public class ApiGatewayController {
         }
         return  ResponseEntity.ok().build(); //codigo 200
     }
+
+    @GetMapping("/api/contenido/visualizar/{idContenido}")
+    public ResponseEntity<?> visualizarYRegistrarProgreso(
+            @PathVariable Integer idContenido,
+            HttpServletRequest request
+    ) {
+        String token = JwtUtil.obtenerToken(request);
+        try {
+            if (JwtUtil.estaExpirado(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("El token está expirado");
+            }
+            String usuario = JwtUtil.obtenerUsername(token);
+            if (!JwtUtil.validarToken(token, usuario)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error al validar token: " + e.getMessage());
+        }
+
+        String contenidoUrl = microservicios.get("contenido") + "/visualizar/contenido/" + idContenido;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<byte[]> respuestaContenido;
+        try {
+            respuestaContenido = restTemplate.exchange(
+                    contenidoUrl,
+                    HttpMethod.GET,
+                    entity,
+                    byte[].class
+            );
+        } catch (HttpClientErrorException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        }
+
+        // llamar a progreso para registrar visualización
+        String progresoUrl = microservicios.get("progreso") + "/registrar-progreso/contenido/" + idContenido;
+
+        try {
+            restTemplate.exchange(
+                    progresoUrl,
+                    HttpMethod.POST,
+                    entity, // mismo header con el token
+                    Void.class
+            );
+        } catch (HttpClientErrorException e) {
+            // Solo logueamos el error si falla progreso, no rompemos la visualización
+            System.out.println("Error al registrar progreso: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+        }
+
+        return ResponseEntity
+                .status(respuestaContenido.getStatusCode())
+                .headers(respuestaContenido.getHeaders())
+                .body(respuestaContenido.getBody());
+    }
+
 }
