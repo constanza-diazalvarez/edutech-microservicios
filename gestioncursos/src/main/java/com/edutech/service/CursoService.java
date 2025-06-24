@@ -1,10 +1,12 @@
 package com.edutech.service;
 
 import com.edutech.model.Curso;
-import com.edutech.model.UsuarioDTO;
 import com.edutech.repository.CursoRepository;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -14,11 +16,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class CursoService {
-    @Autowired //
-
     private CursoRepository cursoRepository;
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
     public List<Curso> listarCursos() {
         return cursoRepository.findAll();
@@ -61,23 +62,26 @@ public class CursoService {
                 .orElseThrow(() -> new RuntimeException("Curso no encontrado con ID: " + idCurso));
     }
 
-    //TRELLO
-    public Curso vincularCursoConInstructor(Integer usuarioId, Integer cursoId) {
-        // Llamada REST al microservicio X para obtener instructor
-        String url = "http://microservicio-x/api/usuarios/{usuarioId}";
-        UsuarioDTO instructor = restTemplate.getForObject(url, UsuarioDTO.class, usuarioId);
-        Curso curso = cursoRepository.findCursoByIdCurso(cursoId);
-        if (instructor == null) {
-            throw new RuntimeException("Instructor no encontrado");
+
+    public Curso vincularCursoConInstructor(Integer instructorId, Integer cursoId) {
+        Boolean instructorExiste = restTemplate.getForObject(
+                "http://localhost:8080/api/auth/" + instructorId,
+                Boolean.class
+        );
+        if (!instructorExiste) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Instructor no encontrado");
         }
-        // Copiar el idInstructor en el curso
-        curso.setIdUsuario(instructor.getIdUsuario());
-        // Guardar curso con el idInstructor copiado
+        Optional<Curso> c = cursoRepository.findById(cursoId);
+        if (c.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado");
+        }
+        Curso curso = c.get();
+        curso.setIdInstructor(instructorId);
         return cursoRepository.save(curso);
     }
 
-    public List<Curso> obtenerCursosPorUsuario(Integer idUsuario) {
-        return cursoRepository.findByIdUsuario(idUsuario);
+    public List<Curso> obtenerCursosPorInstructor(Integer idInstructor) {
+        return cursoRepository.findByIdInstructor(idInstructor);
     }
 
     public List<Curso> obtenerCursosPorCategoria(String categoria) {

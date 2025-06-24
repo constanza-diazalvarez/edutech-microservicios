@@ -28,7 +28,7 @@ public class PagoService {
         Optional<Descuento> descuento = descuentoRepository.findByCodigo(codigo);
 
         Pago pago = new Pago();
-        pago.setIdCliente(id);
+        pago.setIdUsuario(id);
         if(descuento.isPresent()){
             Descuento desctEncontrado = descuento.get();
             pago.setDescuento(desctEncontrado);
@@ -45,6 +45,10 @@ public class PagoService {
 
     public Pago save(Pago pago) {
         return pagoRepository.save(pago);
+    }
+
+    public List<Pago> findByIdUsuario(Integer idUsuario) {
+        return pagoRepository.findByIdUsuario(idUsuario);
     }
 
 }

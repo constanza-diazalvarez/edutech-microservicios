@@ -45,7 +45,8 @@ public class AuthService {
             String token = JwtUtil.generarToken(usuario.getCorreo(), usuario.getRol().getRol(), usuario.getId());
             return new LoginResponse(token, usuario.getRol().getRol(), usuario.getId());
         }
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
+
     }
 
     public ResponseEntity<?> registrar(UsuarioDTO usuarioDTO) {
@@ -120,6 +121,10 @@ public class AuthService {
 
     public Usuario saveUsuario(Usuario usuario) {
         return usuarioRepository.save(usuario);
+    }
+
+    public boolean existeUsuario(Integer id) {
+        return usuarioRepository.existsById(id);
     }
 
 }

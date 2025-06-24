@@ -10,10 +10,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import utils.JwtUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ProgresoService {
@@ -105,4 +102,14 @@ public class ProgresoService {
 
         progresoRepository.save(progreso);
     }
+
+    public Progreso obtenerProgresoPorCurso(Integer idEstudiante, Integer idCurso) {
+        return progresoRepository.findByIdEstudianteAndIdCurso(idEstudiante, idCurso)
+                .orElseThrow(() -> new NoSuchElementException("Progreso no encontrado"));
+    }
+
+    public List<Progreso> obtenerTodosLosProgresos(Integer idEstudiante) {
+        return progresoRepository.findByIdEstudiante(idEstudiante);
+    }
+
 }

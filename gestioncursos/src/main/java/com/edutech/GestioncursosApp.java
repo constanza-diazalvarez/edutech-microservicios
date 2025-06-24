@@ -10,8 +10,5 @@ public class GestioncursosApp {
     public static void main(String[] args) {
         SpringApplication.run(GestioncursosApp.class, args);
     }
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
+
 }

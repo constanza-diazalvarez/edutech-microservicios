@@ -49,7 +49,7 @@ public class DataLoader implements CommandLineRunner {
         for (int i = 0; i < 50; i++) {
             Pago pago = new Pago();
 
-            pago.setIdCliente(faker.number().numberBetween(1, 101));
+            pago.setIdUsuario(faker.number().numberBetween(1, 101));
 
             // 70% de probabilidad de tener descuento
             if (random.nextDouble() < 0.7) {

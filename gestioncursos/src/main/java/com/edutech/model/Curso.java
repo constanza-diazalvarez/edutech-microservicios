@@ -18,7 +18,7 @@ public class Curso {
     private String nombreCurso;
 
     @Column(nullable = true)
-    private Integer idUsuario;
+    private Integer idInstructor;
 
     @Column(nullable = true)
     private String descripcion;//(opcional)
