@@ -1,188 +1,194 @@
 package com.edutech.service;
 
+import com.edutech.configuration.DataLoader;
 import com.edutech.model.Descuento;
 import com.edutech.model.Pago;
 import com.edutech.repository.DescuentoRepository;
 import com.edutech.repository.PagoRepository;
-import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 public class PagoServiceTest {
 
-    @Mock
+    // mock del repositorio de pagos
+    @MockBean
     private PagoRepository pagoRepository;
 
-    @Mock
+    // mock del repositorio de descuentos
+    @MockBean
     private DescuentoRepository descuentoRepository;
 
-    @InjectMocks
+    //el test generarPago_ConCodigoDescuentoInvalido_DeberiaCrearPagoSinDescuento
+    //daba un error porque el mock de pagoRepository se llamaba mas veces de las que se especifica(en el dataloader + el test)
+    @MockBean // Esto evita que el DataLoader real se ejecute
+    private DataLoader dataLoader;
+    // servicio real a probar
+    @Autowired
     private PagoService pagoService;
 
-    private Faker faker;
+    private Descuento descuentoValido;
+    private Pago pagoConDescuento;
+    private Pago pagoSinDescuento;
 
+    //crear entidades
     @BeforeEach
-    void setUp() {
-        faker = new Faker(new Locale("es"));
+    void crearEntidades() {
+        // descuento válido
+        descuentoValido = Descuento.builder()
+                .idDescuento(1L)
+                .codigo("DESC20")
+                .porcentaje(0.2)
+                .build();
+
+        // pago con descuento aplicado
+        pagoConDescuento = Pago.builder()
+                .idCliente(1)
+                .descuento(descuentoValido)
+                .build();
+
+        // pago sin descuento
+        pagoSinDescuento = Pago.builder()
+                .idCliente(2)
+                .descuento(null)
+                .build();
     }
 
+
     @Test
-    void generarPago_ConDescuento_ShouldApplyDiscount() {
-        // Datos de prueba
-        Integer idUsuario = faker.number().numberBetween(1, 100);
-        String codigoDescuento = "DESC" + faker.number().digits(4);
-        Double porcentajeDescuento = 10.0 + faker.number().randomDouble(1, 0, 30);
+    void generarPago_ConCodigoDescuentoValido_DeberiaAplicarDescuento() {
+        // configuracion del mock = existe el descuento
+        when(descuentoRepository.findByCodigo("DESC20")).thenReturn(Optional.of(descuentoValido));
 
-        // Mock del descuento
-        Descuento descuento = new Descuento();
-        descuento.setIdDescuento(faker.number().randomNumber());
-        descuento.setCodigo(codigoDescuento);
-        descuento.setPorcentaje(porcentajeDescuento);
+        // configuracion del mock para que devuelva pago con descuento
+        when(pagoRepository.save(any(Pago.class))).thenReturn(pagoConDescuento);
 
-        // Mock del pago esperado
-        Pago pagoEsperado = new Pago();
-        pagoEsperado.setIdCliente(idUsuario);
-        pagoEsperado.setDescuento(descuento);
+        // metodo a probar
+        Pago resultado = pagoService.generarPago(1, "DESC20");
 
-        when(descuentoRepository.findByCodigo(codigoDescuento))
-                .thenReturn(Optional.of(descuento));
-        when(pagoRepository.save(any(Pago.class)))
-                .thenReturn(pagoEsperado);
-
-        // Ejecutar el metodo
-        Pago resultado = pagoService.generarPago(idUsuario, codigoDescuento);
-
-        // Verificaciones
+        // verificaciones:
+        //pago no nulo
         assertNotNull(resultado);
-        assertEquals(idUsuario, resultado.getIdCliente());
+        //coincide con el idcliente
+        assertEquals(1, resultado.getIdCliente());
+        //debe tener el descuento
         assertNotNull(resultado.getDescuento());
-        assertEquals(codigoDescuento, resultado.getDescuento().getCodigo());
-        assertEquals(porcentajeDescuento, resultado.getDescuento().getPorcentaje());
+        //si codigo no coincide
+        assertEquals("DESC20", resultado.getDescuento().getCodigo());
+        //% no coincide
+        assertEquals(0.2, resultado.getDescuento().getPorcentaje());
 
-        verify(descuentoRepository, times(1)).findByCodigo(codigoDescuento);
-        verify(pagoRepository, times(1)).save(any(Pago.class));
+        // verificar que se llama a los metodos esperados
+        verify(descuentoRepository).findByCodigo("DESC20");
+        verify(pagoRepository).save(any(Pago.class));
     }
 
     @Test
-    void generarPago_SinDescuento_ShouldCreatePaymentWithoutDiscount() {
-        // Datos de prueba
-        Integer idUsuario = faker.number().numberBetween(1, 100);
+    void generarPago_ConCodigoDescuentoInvalido_DeberiaCrearPagoSinDescuento() {
+        //mock para simular que no existe el descuento
+        when(descuentoRepository.findByCodigo("CODIGO_INVALIDO")).thenReturn(Optional.empty());
 
-        // Mock del pago esperado
-        Pago pagoEsperado = new Pago();
-        pagoEsperado.setIdCliente(idUsuario);
-        pagoEsperado.setDescuento(null);
+        //mock para devolver un pago sin descuento
+        when(pagoRepository.save(any(Pago.class))).thenReturn(pagoSinDescuento);
 
-        when(pagoRepository.save(any(Pago.class)))
-                .thenReturn(pagoEsperado);
-
-        // Ejecutar el metodo sin código de descuento
-        Pago resultado = pagoService.generarPago(idUsuario, null);
+        // Ejecutar el metodo con un código inválido
+        Pago resultado = pagoService.generarPago(2, "CODIGO_INVALIDO");
 
         // Verificaciones
+        //pago no nulo
         assertNotNull(resultado);
-        assertEquals(idUsuario, resultado.getIdCliente());
+        //idcliente no coincide
+        assertEquals(2, resultado.getIdCliente());
+        //no debe tener dscto aplicado
         assertNull(resultado.getDescuento());
 
-        verify(descuentoRepository, never()).findByCodigo(any());
-        verify(pagoRepository, times(1)).save(any(Pago.class));
+        // verificar con los mocks
+        verify(descuentoRepository).findByCodigo("CODIGO_INVALIDO");
+        verify(pagoRepository).save(any(Pago.class));
     }
 
     @Test
-    void generarPago_DescuentoNoExiste_ShouldCreatePaymentWithoutDiscount() {
-        // Datos de prueba
-        Integer idUsuario = faker.number().numberBetween(1, 100);
-        String codigoDescuento = "DESC" + faker.number().digits(4);
+    void generarPago_SinCodigoDescuento_DeberiaCrearPagoSinDescuento() {
+        // mock para findByCodigo con null
+        when(descuentoRepository.findByCodigo(null)).thenReturn(Optional.empty());
 
-        // Mock del pago esperado
-        Pago pagoEsperado = new Pago();
-        pagoEsperado.setIdCliente(idUsuario);
-        pagoEsperado.setDescuento(null);
+        //mock para save
+        when(pagoRepository.save(any(Pago.class))).thenReturn(pagoSinDescuento);
 
-        when(descuentoRepository.findByCodigo(codigoDescuento))
-                .thenReturn(Optional.empty());
-        when(pagoRepository.save(any(Pago.class)))
-                .thenReturn(pagoEsperado);
+        //metodo del srvice
+        Pago resultado = pagoService.generarPago(2, null);
 
-        // Ejecutar el metodo
-        Pago resultado = pagoService.generarPago(idUsuario, codigoDescuento);
-
-        // Verificaciones
+        //verificaciones
         assertNotNull(resultado);
-        assertEquals(idUsuario, resultado.getIdCliente());
+        assertEquals(2,resultado.getIdCliente());
         assertNull(resultado.getDescuento());
 
-        verify(descuentoRepository, times(1)).findByCodigo(codigoDescuento);
-        verify(pagoRepository, times(1)).save(any(Pago.class));
+        // interaccion con mock
+        verify(descuentoRepository).findByCodigo(null); // Verifica que se llama con null
+        verify(pagoRepository).save(any(Pago.class));
     }
 
+
     @Test
-    void findAll_ShouldReturnAllPayments() {
-        // Generar datos de prueba con Faker
-        List<Pago> pagos = List.of(
-                crearPagoFake(),
-                crearPagoFake(),
-                crearPagoFake()
-        );
+    void findAll_DeberiaRetornarTodosLosPagos() {
+        //mock para devolver una lista de pagos
+        List<Pago> pagosEsperados = Arrays.asList(pagoConDescuento, pagoSinDescuento);//convierte un array en una lista
+        when(pagoRepository.findAll()).thenReturn(pagosEsperados);
 
-        when(pagoRepository.findAll()).thenReturn(pagos);
-
-        // Ejecutar el metodo
+        // ejecutar el metodo
         List<Pago> resultado = pagoService.findAll();
 
-        // Verificaciones
+        // verificaciones
         assertNotNull(resultado);
-        assertEquals(3, resultado.size());
+        //misma cantidad de pagos
+        assertEquals(2, resultado.size());
 
-        verify(pagoRepository, times(1)).findAll();
+        //se llama al repositorio
+        verify(pagoRepository).findAll();
     }
 
     @Test
-    void save_ShouldSavePayment() {
-        // Generar datos de prueba con Faker
-        Pago pago = crearPagoFake();
+    void save_PagoConDescuento_DeberiaGuardarCorrectamente() {
+        //mock para devolver el pago con descuento
+        when(pagoRepository.save(any(Pago.class))).thenReturn(pagoConDescuento);
 
-        when(pagoRepository.save(any(Pago.class))).thenReturn(pago);
+        //metodo del service
+        Pago resultado = pagoService.save(pagoConDescuento);
 
-        // Ejecutar el metodo
-        Pago resultado = pagoService.save(pago);
-
-        // Verificaciones
+        //verificaciones
         assertNotNull(resultado);
-        assertEquals(pago.getIdCliente(), resultado.getIdCliente());
-        if (pago.getDescuento() != null) {
-            assertEquals(pago.getDescuento().getCodigo(), resultado.getDescuento().getCodigo());
-        }
+        assertEquals(1, resultado.getIdCliente());
+        assertNotNull(resultado.getDescuento());
 
-        verify(pagoRepository, times(1)).save(pago);
+        // verificar que se llama al repositorio
+        verify(pagoRepository).save(pagoConDescuento);
     }
 
-    private Pago crearPagoFake() {
-        Pago pago = new Pago();
-        pago.setIdCliente(faker.number().numberBetween(1, 100));
+    @Test
+    void save_PagoSinDescuento_DeberiaGuardarCorrectamente() {
+        //mock para devolver el pago sin descuento
+        when(pagoRepository.save(any(Pago.class))).thenReturn(pagoSinDescuento);
 
-        // 50% de probabilidad de tener descuento
-        if (faker.bool().bool()) {
-            Descuento descuento = new Descuento();
-            descuento.setIdDescuento(faker.number().randomNumber());
-            descuento.setCodigo("DESC" + faker.number().digits(4));
-            descuento.setPorcentaje(5.0 + faker.number().randomDouble(1, 0, 45));
-            pago.setDescuento(descuento);
-        }
+        //metodo
+        Pago resultado = pagoService.save(pagoSinDescuento);
 
-        return pago;
+        //verificaciones
+        assertNotNull(resultado);
+        assertEquals(2, resultado.getIdCliente());
+        assertNull(resultado.getDescuento());
+
+        //verificar que se llama al repositorio
+        verify(pagoRepository).save(pagoSinDescuento);
     }
 }
