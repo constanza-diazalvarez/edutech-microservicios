@@ -33,7 +33,7 @@ public class PagoService {
             Descuento desctEncontrado = descuento.get();
             pago.setDescuento(desctEncontrado);
         } else {
-            Descuento desctCero = descuentoRepository.findByCodigo("NO_APLICA").get();
+            Descuento desctCero = descuentoRepository.findByCodigo("DSCTO0").get();
             pago.setDescuento(desctCero);
         }
         return pagoRepository.save(pago);
