@@ -62,16 +62,16 @@ public class UsuarioService {
         return save(usuario);
     }
 
-    public Usuario crearUsuario(String authHeader, Usuario usuario) {
-        String token = authHeader.replace("Bearer ", "");
+    public Usuario crearUsuario(HttpServletRequest request, Usuario usuario) {
+        String token = request.getHeader("Authorization").replace("Bearer ", "");
         if (!JwtUtil.validarRolToken(token, "ADMIN")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso suficiente"); //ERROR 403
         }
         return save(usuario);
     }
 
-    public void eliminarUsuario(String authHeader, Integer id) {
-        String token = authHeader.replace("Bearer ", "");
+    public void eliminarUsuario(HttpServletRequest request, Integer id) {
+        String token =  request.getHeader("Authorization").replace("Bearer ", "");
         if (!JwtUtil.validarRolToken(token, "ADMIN")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso suficiente");//403
         }
@@ -88,7 +88,7 @@ public class UsuarioService {
             if (key != null) {
                 switch (key) {
                     case "nombre" -> usuario.setNombre(usuarioMap.get(key).toString());
-                    // Aquí puedes agregar más campos en el futuro como dirección, teléfono, etc.
+                    //aqui se pueden agregar campos como dirección, teléfono, etc.
                     default -> {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Campo no permitido: " + key);
                     }

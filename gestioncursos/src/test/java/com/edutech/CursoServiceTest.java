@@ -1,7 +1,6 @@
 package com.edutech.service;
 
 import com.edutech.model.Curso;
-import com.edutech.model.UsuarioDTO;
 import com.edutech.repository.CursoRepository;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,10 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -161,27 +157,29 @@ public class CursoServiceTest {
     @Test
     void vincularCursoConInstructor_ShouldLinkCourseWithInstructor() {
         // Arrange
-        Integer usuarioId = faker.number().numberBetween(1, 100);
+        Integer instructorId = faker.number().numberBetween(1, 100);
         Integer cursoId = faker.number().numberBetween(1, 100);
 
-        UsuarioDTO instructor = new UsuarioDTO();
-        instructor.setIdUsuario(usuarioId);
+
+
 
         Curso curso = crearCursoFake();
         curso.setIdCurso(cursoId);
+        curso.setIdInstructor(instructorId);
 
-        when(restTemplate.getForObject(anyString(), eq(UsuarioDTO.class), anyInt()))
-                .thenReturn(instructor);
+        when(restTemplate.getForObject(anyString(), eq(Integer.class), anyInt()))
+                .thenReturn(instructorId);
+
         when(cursoRepository.findCursoByIdCurso(cursoId)).thenReturn(curso);
         when(cursoRepository.save(any(Curso.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        Curso resultado = cursoService.vincularCursoConInstructor(usuarioId, cursoId);
+        Curso resultado = cursoService.vincularCursoConInstructor(instructorId, cursoId);
 
         // Assert
         assertNotNull(resultado);
-        assertEquals(usuarioId, resultado.getIdUsuario());
-        verify(restTemplate, times(1)).getForObject(anyString(), eq(UsuarioDTO.class), eq(usuarioId));
+        assertEquals(instructorId, resultado.getIdInstructor());
+        verify(restTemplate, times(1)).getForObject(anyString(), eq(Integer.class), eq(instructorId));
         verify(cursoRepository, times(1)).findCursoByIdCurso(cursoId);
         verify(cursoRepository, times(1)).save(any(Curso.class));
     }
@@ -189,16 +187,16 @@ public class CursoServiceTest {
     @Test
     void vincularCursoConInstructor_ShouldThrowExceptionWhenInstructorNotFound() {
         // Arrange
-        Integer usuarioId = faker.number().numberBetween(1, 100);
+        Integer instructorId = faker.number().numberBetween(1, 100);
         Integer cursoId = faker.number().numberBetween(1, 100);
 
-        when(restTemplate.getForObject(anyString(), eq(UsuarioDTO.class), anyInt()))
+        when(restTemplate.getForObject(anyString(), eq(Integer.class), anyInt()))
                 .thenReturn(null);
 
         // Act & Assert
         assertThrows(RuntimeException.class, () ->
-                cursoService.vincularCursoConInstructor(usuarioId, cursoId));
-        verify(restTemplate, times(1)).getForObject(anyString(), eq(UsuarioDTO.class), eq(usuarioId));
+                cursoService.vincularCursoConInstructor(instructorId, cursoId));
+        verify(restTemplate, times(1)).getForObject(anyString(), eq(Integer.class), eq(instructorId));
         verify(cursoRepository, never()).findCursoByIdCurso(anyInt());
         verify(cursoRepository, never()).save(any(Curso.class));
     }
@@ -206,22 +204,22 @@ public class CursoServiceTest {
     @Test
     void obtenerCursosPorUsuario_ShouldReturnUserCourses() {
         // Arrange
-        Integer idUsuario = faker.number().numberBetween(1, 100);
+        Integer instrunctorId = faker.number().numberBetween(1, 100);
         List<Curso> cursos = Arrays.asList(
-                crearCursoFake(idUsuario),
-                crearCursoFake(idUsuario)
+                crearCursoFake(instrunctorId),
+                crearCursoFake(instrunctorId)
         );
 
-        when(cursoRepository.findByIdUsuario(idUsuario)).thenReturn(cursos);
+        when(cursoRepository.findByIdInstructor(instrunctorId)).thenReturn(cursos);
 
         // Act
-        List<Curso> resultado = cursoService.obtenerCursosPorUsuario(idUsuario);
+        List<Curso> resultado = cursoService.obtenerCursosPorInstructor(instrunctorId);
 
         // Assert
         assertNotNull(resultado);
         assertEquals(2, resultado.size());
-        resultado.forEach(c -> assertEquals(idUsuario, c.getIdUsuario()));
-        verify(cursoRepository, times(1)).findByIdUsuario(idUsuario);
+        resultado.forEach(c -> assertEquals(instrunctorId, c.getIdInstructor()));
+        verify(cursoRepository, times(1)).findByIdInstructor(instrunctorId);
     }
 
     @Test
@@ -250,11 +248,11 @@ public class CursoServiceTest {
         return crearCursoFake(faker.bool().bool() ? faker.number().numberBetween(1, 100) : null);
     }
 
-    private Curso crearCursoFake(Integer idUsuario) {
+    private Curso crearCursoFake(Integer idInstructor) {
         Curso curso = new Curso();
         curso.setIdCurso(faker.number().numberBetween(1, 100));
         curso.setNombreCurso(faker.educator().course());
-        curso.setIdUsuario(idUsuario);
+        curso.setIdInstructor(idInstructor);
         curso.setDescripcion(faker.lorem().sentence());
         curso.setCategoria(faker.options().option("Programación", "Diseño", "Marketing", "Negocios"));
         curso.setNivel(faker.options().option("Principiante", "Intermedio", "Avanzado"));

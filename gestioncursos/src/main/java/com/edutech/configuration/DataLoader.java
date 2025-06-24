@@ -41,7 +41,7 @@ public class DataLoader implements CommandLineRunner {
         Curso curso = new Curso();
 
         curso.setNombreCurso(generarNombre());
-        curso.setIdUsuario(faker.bool().bool() ? faker.number().numberBetween(1, 100) : null);
+        curso.setIdInstructor(faker.bool().bool() ? faker.number().numberBetween(1, 100) : null);
         curso.setDescripcion(faker.bool().bool() ? generarDescripcion() : null);
         curso.setCategoria(generarCategoria());
         curso.setNivel(generarNivel());

@@ -28,12 +28,12 @@ public class PagoService {
         Optional<Descuento> descuento = descuentoRepository.findByCodigo(codigo);
 
         Pago pago = new Pago();
-        pago.setIdCliente(id);
+        pago.setIdUsuario(id);
         if(descuento.isPresent()){
             Descuento desctEncontrado = descuento.get();
             pago.setDescuento(desctEncontrado);
         } else {
-            Descuento desctCero = descuentoRepository.findByCodigo("NO_APLICA").get();
+            Descuento desctCero = descuentoRepository.findByCodigo("DSCTO0").get();
             pago.setDescuento(desctCero);
         }
         return pagoRepository.save(pago);
@@ -45,6 +45,10 @@ public class PagoService {
 
     public Pago save(Pago pago) {
         return pagoRepository.save(pago);
+    }
+
+    public List<Pago> findByIdUsuario(Integer idUsuario) {
+        return pagoRepository.findByIdUsuario(idUsuario);
     }
 
 }

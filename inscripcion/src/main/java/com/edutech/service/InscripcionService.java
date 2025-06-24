@@ -39,7 +39,7 @@ public class InscripcionService {
         return inscripcionRepository.findByIdUsuarioAndIdCurso(idUsuario, idCurso);
     }
 
-    public Inscripcion inscribirseACurso(Integer idUsuario, Integer idCurso) {
+    public Inscripcion inscribirseACurso(Integer idUsuario, Integer idCurso, Integer idPago) {
         Optional<Inscripcion> existente = inscripcionRepository.findByIdUsuarioAndIdCurso(idUsuario, idCurso);
         if (existente.isPresent()) {
             throw new RuntimeException("El usuario ya está inscrito en este curso.");
@@ -48,6 +48,7 @@ public class InscripcionService {
         Inscripcion inscripcion = new Inscripcion();
         inscripcion.setIdUsuario(idUsuario);
         inscripcion.setIdCurso(idCurso);
+        inscripcion.setIdPago(idPago);
         inscripcion.setFechaInscripcion(LocalDateTime.now());
 
         return inscripcionRepository.save(inscripcion);

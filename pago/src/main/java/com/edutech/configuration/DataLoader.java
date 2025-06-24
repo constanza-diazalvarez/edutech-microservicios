@@ -1,6 +1,5 @@
 package com.edutech.configuration;
 
-
 import com.edutech.model.*;
 import com.edutech.repository.DescuentoRepository;
 import com.edutech.repository.PagoRepository;
@@ -10,9 +9,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
+import java.util.List;
+import java.util.Locale;
 import java.util.Random;
-
+import java.util.Optional;
 
 @Profile("test")
 @Component
@@ -23,7 +23,6 @@ public class DataLoader implements CommandLineRunner {
 
     @Autowired
     private DescuentoRepository descuentoRepository;
-
 
     @Override
     public void run(String... args) throws Exception {

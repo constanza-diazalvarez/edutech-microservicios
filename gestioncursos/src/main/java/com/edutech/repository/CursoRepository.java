@@ -9,8 +9,8 @@ import java.util.List;
 @Repository
 public interface CursoRepository extends JpaRepository<Curso, Integer> {
 
-    //Buscar por usuario
-    List<Curso> findByIdUsuario(Integer idUsuario);
+    //Buscar por instructor
+    List<Curso> findByIdInstructor(Integer idInstructor);
 
     // Buscar por categoría
     List<Curso> findByCategoria(String categoria);
@@ -18,7 +18,7 @@ public interface CursoRepository extends JpaRepository<Curso, Integer> {
     // Buscar por nivel
     List<Curso> findByNivel(String nivel);
 
-    // Buscar por nivel
+    // Buscar por duracion
     List<Curso> findByDuracion(int duracion);
 
     // Buscar cursos que contengan una palabra clave

@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import utils.JwtUtil;
@@ -105,6 +106,7 @@ public class ApiGatewayController {
         String base = microservicios.get(servicio);
         String path = request.getRequestURI().replace("/api/" + servicio, "");
         String url = base + path;
+
         /*peticion del cliente: POST /api/auth/login
          *servicio: "auth"
         * request.getRequestURI() = /api/auth/login
@@ -125,8 +127,12 @@ public class ApiGatewayController {
         //headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", request.getHeader("Authorization"));
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && !authHeader.isEmpty()) {
+            headers.set("Authorization", authHeader);
+        }
         headers.setContentType(MediaType.APPLICATION_JSON);
+
 
         /*↑uno de los headers es Autorization por donde pasa el token, pero otro es Content-Type
         * por eso se le indica al header que el cuerpo(body) es de tipo json
@@ -137,23 +143,35 @@ public class ApiGatewayController {
         /*HttpEntity: objeto que representa la peticion HTTP completa. Contiene el body y los headers
         *   →esto es lo que el RestTemplate envia al microservicio en cuestion*/
 
+        try {
+            //↓aqui es donde se hace la llamada HTTP al microservicio
+            ResponseEntity<String> respuesta = restTemplate.exchange(
+                    /*exchance es la manera de llamar a otro servicio http
+                    * exchange hace una petición HTTP con el metod o, headers y body que le indicas, y devuelve
+                    * la respuesta completa (código de estado, headers y body).
+                    * Es la forma más flexible de RestTemplate para interactuar con servicios HTTP*/
+                    url,
+                    metodo,
+                    entity,
+                    String.class
+            );
 
-        //↓aqui es donde se hace la llamada HTTP al microservicio
-        ResponseEntity<String> respuesta = restTemplate.exchange(
-                /*exchance es la manera de llamar a otro servicio http
-                * exchange hace una petición HTTP con el metod o, headers y body que le indicas, y devuelve
-                * la respuesta completa (código de estado, headers y body).
-                * Es la forma más flexible de RestTemplate para interactuar con servicios HTTP*/
-                url,
-                metodo,
-                entity,
-                String.class
-        );
-
-        return ResponseEntity
-                .status(respuesta.getStatusCode())
-                .headers(respuesta.getHeaders())
-                .body(respuesta.getBody());
+            return ResponseEntity
+                    .status(respuesta.getStatusCode())
+                    .headers(respuesta.getHeaders())
+                    .body(respuesta.getBody());
+        } catch (HttpClientErrorException | HttpServerErrorException ex) {
+            //maneja errores 400 y 500 reenviando el status y el body original del microservicio
+            return ResponseEntity
+                    .status(ex.getStatusCode())
+                    .headers(ex.getResponseHeaders())
+                    .body(ex.getResponseBodyAsString());
+        } catch (Exception ex) {
+            //otros errores inesperados
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error en el Gateway: " + ex.getMessage());
+        }
     }
 
     @PostMapping("/api/inscripcion/{idCurso}")
@@ -165,6 +183,7 @@ public class ApiGatewayController {
             HttpServletRequest request
     ){
         String token = JwtUtil.obtenerToken(request);
+
         try {
             if(JwtUtil.estaExpirado(token)){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -190,40 +209,50 @@ public class ApiGatewayController {
         }
 
         try {
-            ResponseEntity<String> respuestaPago = restTemplate.exchange(
+            ResponseEntity<Map> respuestaPago = restTemplate.exchange(
                     pagoUrl,
                     HttpMethod.POST,
                     new HttpEntity<>(codigoDescuento, headers),
-                    String.class
+                    Map.class
             );
+
+            Map<String, Object> cuerpoPago = respuestaPago.getBody();
+            if (cuerpoPago == null || !cuerpoPago.containsKey("idPago")) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("La respuesta del servicio de pago no contiene idPago");
+            }
+            Integer idPago = (Integer) cuerpoPago.get("idPago");
+
 
             if (!respuestaPago.getStatusCode().equals(HttpStatus.OK)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("Error al validar el procesar pago");
             }
 
+            String inscripcionUrl = microservicios.get("inscripcion") + "/"  + idCurso;
+
+            HttpHeaders nuevosHeaders = new HttpHeaders();
+            nuevosHeaders.setContentType(MediaType.APPLICATION_JSON);
+            nuevosHeaders.set("Authorization", "Bearer " + token);
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("idPago", idPago);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, nuevosHeaders);
+
+            ResponseEntity<String> respuestaInscripcion = restTemplate.exchange(
+                    inscripcionUrl,
+                    HttpMethod.POST,
+                    entity,
+                    String.class
+            );
+
+            return ResponseEntity
+                    .status(respuestaInscripcion.getStatusCode())
+                    .body(respuestaInscripcion.getBody());
         } catch (HttpClientErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         }
-
-        String inscripcionUrl = microservicios.get("inscripcion") + "/"  + idCurso;
-
-        HttpHeaders nuevosHeaders = new HttpHeaders();
-        nuevosHeaders.setContentType(MediaType.APPLICATION_JSON);
-        nuevosHeaders.set("Authorization", "Bearer " + token);
-
-        HttpEntity<String> entity = new HttpEntity<>(nuevosHeaders);
-
-        ResponseEntity<String> respuestaInscripcion = restTemplate.exchange(
-                inscripcionUrl,
-                HttpMethod.POST,
-                entity,
-                String.class
-        );
-
-        return ResponseEntity
-                .status(respuestaInscripcion.getStatusCode())
-                .body(respuestaInscripcion.getBody());
     }
 
     @PatchMapping("/api/usuarios/perfil/editar")

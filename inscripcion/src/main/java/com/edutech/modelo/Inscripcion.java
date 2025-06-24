@@ -23,6 +23,9 @@ public class Inscripcion {
     private Integer idCurso;
 
     @Column(nullable = false)
+    private Integer idPago;
+
+    @Column(nullable = false)
     private LocalDateTime fechaInscripcion;
 }
 

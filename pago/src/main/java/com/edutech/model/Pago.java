@@ -18,7 +18,7 @@ public class Pago {
     private Integer idPago;
 
     @Column(nullable = false)
-    private Integer idCliente;
+    private Integer idUsuario;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="id_descuento")
