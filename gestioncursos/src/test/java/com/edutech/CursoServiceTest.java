@@ -63,7 +63,7 @@ public class CursoServiceTest {
     }
 
     @Test
-    void crearCurso_ShouldSaveNewCourse() {
+    void crearCurso_DeberiaGuardarCurso() {
         // Arrange
         Curso cursoNuevo = crearCursoFake();
         cursoNuevo.setIdCurso(null);
@@ -83,15 +83,15 @@ public class CursoServiceTest {
     }
 
     @Test
-    void eliminarCursoPorId_ShouldDeleteExistingCourse() {
-        // Arrange
+    void eliminarCursoPorId_DeberiaEliminarCurso() {
+        // Preparar datos
         Integer idCurso = faker.number().numberBetween(1, 100);
         when(cursoRepository.existsById(idCurso)).thenReturn(true);
 
-        // Act
+        // Ejecutar metodos
         cursoService.eliminarCursoPorId(idCurso);
 
-        // Assert
+        // verificar resultados
         verify(cursoRepository, times(1)).existsById(idCurso);
         verify(cursoRepository, times(1)).deleteById(idCurso);
     }

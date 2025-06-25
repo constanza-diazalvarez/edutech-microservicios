@@ -14,7 +14,7 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.Optional;
 
-@Profile("test")
+@Profile("dev")
 @Component
 public class DataLoader implements CommandLineRunner {
 
@@ -57,7 +57,7 @@ public class DataLoader implements CommandLineRunner {
                     Long idDescuento = (long) faker.number().numberBetween(1, 4);
                     descuento = descuentoRepository.findById(idDescuento);
                 }
-                Pago pago = Pago.builder().idCliente(idCliente).descuento(descuento.orElse(null)) // Convierte Optional a null si está vacío
+                Pago pago = Pago.builder().idUsuario(idCliente).descuento(descuento.orElse(null)) // Convierte Optional a null si está vacío
                         .build();
                 pagoRepository.save(pago);
             }

@@ -90,19 +90,18 @@ public class ContenidoServiceTest {
     @Test
     void actualizarContenido_ConNuevoArchivo_DeberiaActualizarTodosLosCampos() throws IOException {
         // mocks
-        when(contenidoRepository.findById(ID_CONTENIDO_VALIDO)).thenReturn(Optional.of(contenidoExistente)); // Simula encontrar el contenido
-        when(contenidoRepository.save(any(Contenido.class))).thenAnswer(i -> i.getArgument(0)); // Devuelve el mismo objeto que recibe
-
+        // Simula encontrar el contenido
+        when(contenidoRepository.findById(ID_CONTENIDO_VALIDO)).thenReturn(Optional.of(contenidoExistente));
+        // Devuelve el mismo objeto que recibe
+        when(contenidoRepository.save(any(Contenido.class))).thenAnswer(i -> i.getArgument(0));
         //nuevo id para actualización
         Integer nuevoCursoId = 2;
-
         //metodo
         Contenido resultado = contenidoService.actualizarContenido(
                 ID_CONTENIDO_VALIDO,
                 nuevoCursoId,
                 archivoValido
         );
-
         // verificaciones
         assertNotNull(resultado);
         assertEquals(ID_CONTENIDO_VALIDO, resultado.getIdContenido());
@@ -176,8 +175,8 @@ public class ContenidoServiceTest {
         List<Contenido> resultado = contenidoService.obtenerTodoContenido();
 
         // verificaciones
-        assertNotNull(resultado, "La lista no debería ser nula");
-        assertEquals(3, resultado.size(), "Debería retornar 3 contenidos");
+        assertNotNull(resultado);
+        assertEquals(3, resultado.size());
 
         // verificar interacción
         verify(contenidoRepository, times(1)).findAll();
