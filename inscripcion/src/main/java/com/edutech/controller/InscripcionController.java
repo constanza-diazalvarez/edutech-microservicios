@@ -5,6 +5,9 @@ import com.edutech.modelo.Inscripcion;
 import com.edutech.service.InscripcionService;
 import com.edutech.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +39,17 @@ public class InscripcionController {
             }
     )
     public Inscripcion inscribirUsuario(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "No es obligatorio ingresar descuento",
+                    required = true,
+                    content = @Content(
+                            examples = @ExampleObject(value = """
+                        {
+                          "codigoDescuento": "DSC25"
+                        }
+                    """)
+                    )
+            )
             @PathVariable("idCurso") Integer idCurso,
             @RequestBody Map<String, Object> body,
             HttpServletRequest request) {

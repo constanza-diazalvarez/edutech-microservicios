@@ -14,7 +14,7 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.Optional;
 
-@Profile("test")
+@Profile("dev")
 @Component
 public class DataLoader implements CommandLineRunner {
 
@@ -31,6 +31,7 @@ public class DataLoader implements CommandLineRunner {
         }
 
         private void cargarDescuentos() {
+            crearDscto(0);
             crearDscto(25);
             crearDscto(40);
             crearDscto(70);
@@ -50,14 +51,14 @@ public class DataLoader implements CommandLineRunner {
             Random random = new Random();
 
             for (int i = 0; i < 10; i++) {
-                int idCliente = faker.number().numberBetween(1, 51);
+                int idUsuario = faker.number().numberBetween(1, 51);
                 Optional<Descuento> descuento = Optional.empty(); // Por defecto sin descuento
                 // 45% de probabilidad de tener descuento
                 if (random.nextDouble() < 0.45) {
                     Long idDescuento = (long) faker.number().numberBetween(1, 4);
                     descuento = descuentoRepository.findById(idDescuento);
                 }
-                Pago pago = Pago.builder().idCliente(idCliente).descuento(descuento.orElse(null)) // Convierte Optional a null si está vacío
+                Pago pago = Pago.builder().idUsuario(idUsuario).descuento(descuento.orElse(null)) // Convierte Optional a null si está vacío
                         .build();
                 pagoRepository.save(pago);
             }

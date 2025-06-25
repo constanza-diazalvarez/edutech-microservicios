@@ -14,7 +14,7 @@ import net.datafaker.Faker;
 import java.util.Locale;
 import java.util.Optional;
 
-@Profile("test")
+@Profile("dev")
 @Component
 @Transactional
 public class DataLoaderUsuarios implements CommandLineRunner {
@@ -54,10 +54,34 @@ public class DataLoaderUsuarios implements CommandLineRunner {
 
         for (int i = 0; i < 20; i++) {
             Usuario usuario = new Usuario();
-            String nombre = faker.name().firstName();
-            String apellido = faker.name().lastName();
+            String nombre = "";
+            String apellido = "";
+            String nombrePrueba = faker.name().firstName().split(" ")[0].toLowerCase();
+            for(Character c : nombrePrueba.toCharArray()) {
+                switch (c) {
+                    case 'á'-> nombre += 'a';
+                    case 'é'-> nombre += 'e';
+                    case 'í'-> nombre += 'i';
+                    case 'ó'-> nombre += 'o';
+                    case 'ú'-> nombre += 'u';
+                    case 'ñ'-> nombre += 'n';
+                    default -> nombre += c;
+                }
+            }
+            String apellidoPrueba = faker.name().lastName().toLowerCase();
+            for(Character c : apellidoPrueba.toCharArray()) {
+                switch (c) {
+                    case 'á'-> apellido += 'a';
+                    case 'é'-> apellido += 'e';
+                    case 'í'-> apellido += 'i';
+                    case 'ó'-> apellido += 'o';
+                    case 'ú'-> apellido += 'u';
+                    case 'ñ'-> apellido += 'n';
+                    default -> apellido += c;
+                }
+            }
 
-            usuario.setNombre(nombre + " " + apellido);
+            //usuario.setNombre(nombre + " " + apellido);
             usuario.setCorreo(generarMailUnico(nombre + apellido.toLowerCase() + "@gmail.com"));
             usuario.setPassword(faker.internet().password(6, 8, false, false, false));//LargoMinimo-LargoMaximo-Mayusculas-LetrasEspeciales-Digitos
 

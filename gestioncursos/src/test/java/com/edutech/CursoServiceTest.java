@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
@@ -43,7 +45,7 @@ public class CursoServiceTest {
     }
 
     @Test
-    void listarCursos_ShouldReturnAllCourses() {
+    void listarCursos_DeberiaRetornarTodosLosCursosExistentes() {
         // Arrange
         List<Curso> cursos = Arrays.asList(
                 crearCursoFake(),
@@ -63,7 +65,7 @@ public class CursoServiceTest {
     }
 
     @Test
-    void crearCurso_ShouldSaveNewCourse() {
+    void crearCurso_DeberiaGuardarNuevoCursoCorrectamente() {
         // Arrange
         Curso cursoNuevo = crearCursoFake();
         cursoNuevo.setIdCurso(null);
@@ -83,7 +85,7 @@ public class CursoServiceTest {
     }
 
     @Test
-    void eliminarCursoPorId_ShouldDeleteExistingCourse() {
+    void eliminarCursoPorId_DeberiaEliminarCursoExistente() {
         // Arrange
         Integer idCurso = faker.number().numberBetween(1, 100);
         when(cursoRepository.existsById(idCurso)).thenReturn(true);
@@ -97,7 +99,7 @@ public class CursoServiceTest {
     }
 
     @Test
-    void eliminarCursoPorId_ShouldThrowExceptionWhenCourseNotExists() {
+    void eliminarCursoPorId_DeberiaLanzarExcepcionCuandoCursoNoExiste() {
         // Arrange
         Integer idCurso = faker.number().numberBetween(1, 100);
         when(cursoRepository.existsById(idCurso)).thenReturn(false);
@@ -109,7 +111,7 @@ public class CursoServiceTest {
     }
 
     @Test
-    void actualizarCurso_ShouldUpdateExistingCourse() {
+    void actualizarCurso_DeberiaActualizarCursoExistenteCorrectamente() {
         // Arrange
         Integer idCurso = faker.number().numberBetween(1, 100);
         Curso cursoExistente = crearCursoFake();
@@ -142,7 +144,7 @@ public class CursoServiceTest {
     }
 
     @Test
-    void actualizarCurso_ShouldThrowExceptionWhenCourseNotExists() {
+    void actualizarCurso_DeberiaLanzarExcepcionCuandoCursoNoExiste() {
         // Arrange
         Integer idCurso = faker.number().numberBetween(1, 100);
         when(cursoRepository.findById(idCurso)).thenReturn(Optional.empty());
@@ -153,15 +155,12 @@ public class CursoServiceTest {
         verify(cursoRepository, times(1)).findById(idCurso);
         verify(cursoRepository, never()).save(any(Curso.class));
     }
-
+/*
     @Test
     void vincularCursoConInstructor_ShouldLinkCourseWithInstructor() {
         // Arrange
         Integer instructorId = faker.number().numberBetween(1, 100);
         Integer cursoId = faker.number().numberBetween(1, 100);
-
-
-
 
         Curso curso = crearCursoFake();
         curso.setIdCurso(cursoId);
@@ -182,9 +181,9 @@ public class CursoServiceTest {
         verify(restTemplate, times(1)).getForObject(anyString(), eq(Integer.class), eq(instructorId));
         verify(cursoRepository, times(1)).findCursoByIdCurso(cursoId);
         verify(cursoRepository, times(1)).save(any(Curso.class));
-    }
+    }*/
 
-    @Test
+    /*@Test
     void vincularCursoConInstructor_ShouldThrowExceptionWhenInstructorNotFound() {
         // Arrange
         Integer instructorId = faker.number().numberBetween(1, 100);
@@ -199,10 +198,73 @@ public class CursoServiceTest {
         verify(restTemplate, times(1)).getForObject(anyString(), eq(Integer.class), eq(instructorId));
         verify(cursoRepository, never()).findCursoByIdCurso(anyInt());
         verify(cursoRepository, never()).save(any(Curso.class));
+    }*/
+
+    //caso en que curso e instructor existen
+    @Test
+    void testVincularCursoConInstructor_exito() {
+        // Arrange: preparar
+        Integer instructorId = faker.number().numberBetween(1, 100);
+        Integer cursoId = faker.number().numberBetween(1, 100);
+
+        Curso curso = new Curso();
+        curso.setIdCurso(cursoId);
+
+        when(restTemplate.getForObject("http://localhost:8080/api/auth/" + instructorId, Boolean.class))
+                .thenReturn(true);
+
+        when(cursoRepository.findById(cursoId))
+                .thenReturn(Optional.of(curso));
+                 //↑entonces devuelve un Optional que contiene un Curso
+
+        when(cursoRepository.save(any(Curso.class))).thenReturn(curso);
+        //♥opcion:  .thenAnswer(invocation -> invocation.getArgument(0)); → Devuelve el curso pasado
+        // Act: ejecutar
+        Curso resultado = cursoService.vincularCursoConInstructor(instructorId, cursoId);
+
+        // Assert: verificar
+        assertEquals(instructorId, resultado.getIdInstructor());
+        verify(cursoRepository).save(curso);
     }
 
+    //caso en queinstructor no exite
     @Test
-    void obtenerCursosPorUsuario_ShouldReturnUserCourses() {
+    void testVincularCursoConInstructor_instructorNoExiste() {
+        Integer instructorId = 1;
+        Integer cursoId = 10;
+
+        when(restTemplate.getForObject("http://localhost:8080/api/auth/" + instructorId, Boolean.class))
+                .thenReturn(false);
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> cursoService.vincularCursoConInstructor(instructorId, cursoId));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertTrue(exception.getReason().contains("Instructor no encontrado"));
+    }
+
+    //curso no exite
+    @Test
+    void testVincularCursoConInstructor_cursoNoExiste() {
+        Integer instructorId = 1;
+        Integer cursoId = 10;
+
+        when(restTemplate.getForObject("http://localhost:8080/api/auth/" + instructorId, Boolean.class))
+                .thenReturn(true);
+
+        when(cursoRepository.findById(cursoId)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> cursoService.vincularCursoConInstructor(instructorId, cursoId));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertTrue(exception.getReason().contains("Curso no encontrado"));
+    }
+
+
+
+    @Test
+    void obtenerCursosPorInstructor_DeberiaRetornarCursosDelInstructor()  {
         // Arrange
         Integer instrunctorId = faker.number().numberBetween(1, 100);
         List<Curso> cursos = Arrays.asList(
@@ -212,10 +274,8 @@ public class CursoServiceTest {
 
         when(cursoRepository.findByIdInstructor(instrunctorId)).thenReturn(cursos);
 
-        // Act
         List<Curso> resultado = cursoService.obtenerCursosPorInstructor(instrunctorId);
 
-        // Assert
         assertNotNull(resultado);
         assertEquals(2, resultado.size());
         resultado.forEach(c -> assertEquals(instrunctorId, c.getIdInstructor()));
@@ -223,7 +283,7 @@ public class CursoServiceTest {
     }
 
     @Test
-    void obtenerCursosPorCategoria_ShouldReturnCategoryCourses() {
+    void obtenerCursosPorCategoria_DeberiaRetornarCursosDeLaCategoria() {
         // Arrange
         String categoria = "Programación";
         List<Curso> cursos = Arrays.asList(

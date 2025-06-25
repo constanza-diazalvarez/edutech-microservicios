@@ -38,13 +38,11 @@ public class SwaggerConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // ↓aqui le da permiso a la api gateway para acceder a este microservicio desde el puerto 8080
         registry.addMapping("/v3/api-docs/**")
                 .allowedOrigins("http://localhost:8080") // Gateway
                 .allowedMethods("GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH")
                 .allowedHeaders("*");
 
-        // ↓este es para mantener el poder acceder al auth directamente
         registry.addMapping("/doc/swagger/auth/**")
                 .allowedOrigins("http://localhost:8080")
                 .allowedMethods("GET");

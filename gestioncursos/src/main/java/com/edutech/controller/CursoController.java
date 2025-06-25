@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import utils.JwtUtil;
 
 import java.util.List;
@@ -46,7 +47,9 @@ public class CursoController {
     )
     public ResponseEntity<?> crearCurso(@RequestBody Curso curso, HttpServletRequest request) {
         String token = request.getHeader("Authorization").replace("Bearer ", "");
-        JwtUtil.validarRolToken(token, "GERENTE_CURSOS");
+        if(!JwtUtil.validarRolToken(token, "GERENTE_CURSOS")){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No está autorizado para crear un curso");
+        }
         Curso nuevoCurso = cursoService.crearCurso(curso);
         return ResponseEntity.ok().body("Curso creado con ID: " + nuevoCurso.getIdCurso());
     }

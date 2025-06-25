@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import utils.JwtUtil;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/pago")
@@ -37,8 +38,13 @@ public class PagoController {
     )
     public Pago generarPago(
             HttpServletRequest request,
-            @RequestParam(value = "codigoDescuento", required = false) String codigoDescuento
+            @RequestBody(required = false) Map<String, Object> body
+            //RequestParam(value = "codigoDescuento", required = false) String codigoDescuento
     ){
+        String codigoDescuento = null;
+        if (body != null && body.containsKey("codigoDescuento")) {
+            codigoDescuento = (String) body.get("codigoDescuento");
+        }
         return pagoService.generarPago(request, codigoDescuento);
     }
 

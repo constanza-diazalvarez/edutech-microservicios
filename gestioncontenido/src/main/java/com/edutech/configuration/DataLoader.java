@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 
-@Profile("test")
+@Profile("dev")
 @Component
 public class DataLoader implements CommandLineRunner {
 

@@ -177,9 +177,9 @@ public class ApiGatewayController {
     @PostMapping("/api/inscripcion/{idCurso}")
     public ResponseEntity<?> incribirPagarCurso(
             @PathVariable("idCurso") Integer idCurso,
-            @RequestBody(required = false) String codigoDescuento,
+            @RequestBody(required = false) Map<String, Object> bodyRequest,
+            //@RequestBody(required = false) String codigoDescuento,
             //@RequestParam(value = "codigoDescuento", required = false) String codigoDescuento,
-            @RequestHeader HttpHeaders headers,
             HttpServletRequest request
     ){
         String token = JwtUtil.obtenerToken(request);
@@ -202,17 +202,28 @@ public class ApiGatewayController {
                     .body("Error al validar el token: " + e.getMessage());
         }
 
+        String codigoDescuento = null;
+        if (bodyRequest != null && bodyRequest.containsKey("codigoDescuento")) {
+            codigoDescuento = (String) bodyRequest.get("codigoDescuento");
+        }
         String pagoUrl = microservicios.get("pago") + "/procesar-pago";
 
-        if (codigoDescuento != null && !codigoDescuento.isEmpty()) {
-            pagoUrl += "?codigoDescuento=" + codigoDescuento;
-        }
-
         try {
+            Map<String, Object> bodyPago = new HashMap<>();
+            if (codigoDescuento != null) {
+                bodyPago.put("codigoDescuento", codigoDescuento);
+            }
+
+            HttpHeaders headersPago = new HttpHeaders();
+            headersPago.setContentType(MediaType.APPLICATION_JSON);
+            headersPago.set("Authorization", request.getHeader("Authorization"));
+            HttpEntity<Map<String, Object>> requestPago = new HttpEntity<>(bodyPago, headersPago);
+
+
             ResponseEntity<Map> respuestaPago = restTemplate.exchange(
                     pagoUrl,
                     HttpMethod.POST,
-                    new HttpEntity<>(codigoDescuento, headers),
+                    new HttpEntity<>(bodyPago, headersPago),
                     Map.class
             );
 
