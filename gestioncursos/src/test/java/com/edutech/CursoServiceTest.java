@@ -206,32 +206,27 @@ public class CursoServiceTest {
         // Arrange: preparar
         Integer instructorId = faker.number().numberBetween(1, 100);
         Integer cursoId = faker.number().numberBetween(1, 100);
-
         Curso curso = new Curso();
         curso.setIdCurso(cursoId);
 
         when(restTemplate.getForObject("http://localhost:8080/api/auth/" + instructorId, Boolean.class))
                 .thenReturn(true);
-
         when(cursoRepository.findById(cursoId))
                 .thenReturn(Optional.of(curso));
                  //↑entonces devuelve un Optional que contiene un Curso
-
         when(cursoRepository.save(any(Curso.class))).thenReturn(curso);
         //♥opcion:  .thenAnswer(invocation -> invocation.getArgument(0)); → Devuelve el curso pasado
         // Act: ejecutar
         Curso resultado = cursoService.vincularCursoConInstructor(instructorId, cursoId);
-
-        // Assert: verificar
         assertEquals(instructorId, resultado.getIdInstructor());
-        verify(cursoRepository).save(curso);
+        verify(cursoRepository).save(resultado);
     }
 
     //caso en queinstructor no exite
     @Test
     void testVincularCursoConInstructor_instructorNoExiste() {
-        Integer instructorId = 1;
-        Integer cursoId = 10;
+        Integer instructorId = faker.number().numberBetween(1, 100);
+        Integer cursoId = faker.number().numberBetween(1, 100);
 
         when(restTemplate.getForObject("http://localhost:8080/api/auth/" + instructorId, Boolean.class))
                 .thenReturn(false);
@@ -246,12 +241,11 @@ public class CursoServiceTest {
     //curso no exite
     @Test
     void testVincularCursoConInstructor_cursoNoExiste() {
-        Integer instructorId = 1;
-        Integer cursoId = 10;
+        Integer instructorId = faker.number().numberBetween(1, 100);
+        Integer cursoId = faker.number().numberBetween(1, 100);
 
         when(restTemplate.getForObject("http://localhost:8080/api/auth/" + instructorId, Boolean.class))
                 .thenReturn(true);
-
         when(cursoRepository.findById(cursoId)).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
