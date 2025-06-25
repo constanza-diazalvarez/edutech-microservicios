@@ -1,124 +1,177 @@
-package com.edutech.controller;
+package com.edutech.service;
 
 import com.edutech.dto.LoginRequest;
 import com.edutech.dto.LoginResponse;
+import com.edutech.dto.UsuarioDTO;
 import com.edutech.model.Rol;
 import com.edutech.model.Usuario;
-import com.edutech.service.UsuarioService;
+import com.edutech.repository.RolRepository;
+import com.edutech.repository.UsuarioRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import utils.JwtUtil;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest // Anotación que carga el contexto completo de Spring para la prueba
+@SpringBootTest
 public class AuthServiceTest {
 
-    // Inyectamos el controlador real que queremos probar
-    @Autowired
-    private AuthController authController;
+    @Mock
+    private UsuarioRepository usuarioRepository;
+    @Mock
+    private RolRepository rolRepository;
+    @Mock
+    private RestTemplate restTemplate;
+    @InjectMocks
+    private AuthService authService;
 
-    // Creamos un mock del servicio de usuario para simular su comportamiento
-    @MockBean
-    private UsuarioService usuarioService;
+    private Usuario usuario;
+    private Rol rolAdmin;
+
+    @BeforeEach
+    void setUp() {
+        Mockito.reset(usuarioRepository);
+        rolAdmin = new Rol();
+        rolAdmin.setId(1);
+        rolAdmin.setRol("ADMIN");
+
+        usuario = new Usuario();
+        usuario.setId(1);
+        usuario.setCorreo("admin@example.com");
+        usuario.setPassword("123456");
+        usuario.setRol(rolAdmin);
+    }
+
     @Test
-    public void pruebaLoginExitoso() {
-        // crear rol de administrador
-        Rol rolAdmin = Rol.builder()
-                .id(1)
-                .rol("ADMIN")
-                .build();
-
-        // un usuario mock (simulado) para la prueba
-        Usuario usuarioMock = Usuario.builder()
-                .id(1)
-                .nombre("admin")
-                .password("123456") // contraseña "correcta"
-                .rol(rolAdmin)
-                .build();
-
-        //la solicitud de login que se envia
+    public void loginExitoso() {
+        // configurar el request de login
         LoginRequest request = new LoginRequest();
-        request.setNombre("admin");
+        request.setCorreo("admin@example.com");
         request.setPassword("123456");
 
-        //simular el comportamiento del servicio
-        // cuando alguien llame a findByNombre("admin"), devolvera el usuario mock
-        when(usuarioService.findByNombre("admin")).thenReturn(Optional.of(usuarioMock));
-        // llamar al metodo real a probar
-        LoginResponse response = authController.login(request);
+        // configurar el mock del usuario
+        Usuario usuarioMock = new Usuario();
+        usuarioMock.setId(1);
+        usuarioMock.setCorreo("admin@example.com");
+        usuarioMock.setPassword("123456"); // Misma contraseña que el request
+        usuarioMock.setRol(new Rol(1, "ADMIN"));
+
+        // configurar el mock del repositorio
+        when(usuarioRepository.findByCorreo("admin@example.com"))
+                .thenReturn(Optional.of(usuarioMock));
+
+        // ejecutar el metodo
+        LoginResponse response = authService.login(request);
 
         // verificaciones
-        // el response no debe ser nulo
         assertNotNull(response);
-
-        // el token generado debe ser válido = verificar con JwtUtil
-        assertTrue(JwtUtil.validarToken(response.getToken(), "admin"));
-
-        // el rol en la respuesta debe ser "ADMIN"
+        assertNotNull(response.getToken());
         assertEquals("ADMIN", response.getRol());
-
-        // el ID de usuario debe ser 1
         assertEquals(1, response.getIdUsuario());
+
+        // verificar que el token es válido
+        assertTrue(JwtUtil.validarToken(response.getToken(), "admin@example.com"));
     }
 
     @Test
-    public void pruebaLoginContraseñaIncorrecta() {
-        // crear usuario
-        Usuario usuarioMock = Usuario.builder()//builder genera automáticamente un "constructor paso a paso".
-                .nombre("usuario")
-                .password("contraseñaCorrecta") // contraseña guardada en DB
-                .build();
-        // solicitud de login que se envia
+    public void loginContrasenaIncorrecta() {
+        // configurar el request con credenciales
         LoginRequest request = new LoginRequest();
-        request.setNombre("usuario");
-        request.setPassword("contraseñaIncorrecta"); // Contraseña que se envia
+        request.setCorreo("admin@example.com");
+        request.setPassword("123456");  // Contraseña que el usuario está intentando usar
 
-        // mock = qué debe devolver el servicio mockeado.
-        when(usuarioService.findByNombre("usuario")).thenReturn(Optional.of(usuarioMock));
+        // crear un usuario mock con contraseña completamente distinta
+        Usuario usuarioMock = new Usuario();
+        usuarioMock.setCorreo("admin@example.com");
+        usuarioMock.setPassword("passwordCorrecta");  // Contraseña real almacenada
 
-        // debe lanzar una excepción cuando la contraseña no coincide
-        assertThrows(RuntimeException.class, () -> {
-            authController.login(request);
-        });
+        // configurar el mock del repositorio
+        when(usuarioRepository.findByCorreo("admin@example.com"))
+                .thenReturn(Optional.of(usuarioMock));
+
+        // ejecutar y verificar que se lanza la excepción
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> authService.login(request)
+        );
+
+        // verificar detalles de la excepción
+        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
+        assertEquals("Credenciales incorrectas", exception.getReason());
+
+        // verificar interacción con el repositorio
+        verify(usuarioRepository, times(1)).findByCorreo("admin@example.com");
     }
 
     @Test
-    public void pruebaLoginUsuarioNoEncontrado() {
-        // simular que no encuentra el usuario
-        when(usuarioService.findByNombre("inexistente")).thenReturn(Optional.empty());
-        // solicitud de login que se envia
-        LoginRequest request = new LoginRequest();
-        request.setNombre("inexistente");
-        request.setPassword("cualquiercontraseña");
-        // debe lanzar una excepción cuando el usuario no existe
-        assertThrows(RuntimeException.class, () -> {
-            authController.login(request);
+    public void registrarUsuarioExitoso() {
+        //mock de un usuario
+        UsuarioDTO usuarioDTO = new UsuarioDTO();
+        usuarioDTO.setCorreo("new@example.com");
+        usuarioDTO.setPassword("newpassword");
+        //mock de un rol
+        Rol rolEstudiante = new Rol();
+        rolEstudiante.setId(4);
+        rolEstudiante.setRol("ESTUDIANTE");
+
+        when(rolRepository.findById(4)).thenReturn(Optional.of(rolEstudiante));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> {
+            Usuario u = invocation.getArgument(0);
+            u.setId(2); // Simular ID generado
+            return u;
         });
+
+        // Ejecutar el metodo
+        ResponseEntity<?> response = authService.registrar(usuarioDTO);
+
+        // Verificaciones
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody() instanceof UsuarioDTO);
+
+        UsuarioDTO responseDTO = (UsuarioDTO) response.getBody();
+        assertEquals("new@example.com", responseDTO.getCorreo());
+        assertEquals("ACTIVO", responseDTO.getEstado());
+
+        // Verificar que se llamó al servicio externo
+        verify(restTemplate, times(1)).postForEntity(
+                eq("http://localhost:8080/api/usuarios/registrar"),
+                any(UsuarioDTO.class),
+                eq(Void.class));
     }
 
     @Test
-    public void pruebaRegistrarUsuario() {
-        Usuario nuevoUsuario = Usuario.builder()
-                .nombre("nuevoUsuario")
-                .password("pass123")
-                .build();
+    public void registrarUsuarioRolNoEncontrado() {
+        // Configurar los mocks
+        UsuarioDTO usuarioDTO = new UsuarioDTO();
+        usuarioDTO.setCorreo("new@example.com");
+        usuarioDTO.setPassword("newpassword");
 
-        // cuando llama a save, devolvera el mismo usuario
-        when(usuarioService.save(any(Usuario.class))).thenReturn(nuevoUsuario);
+        when(rolRepository.findById(4)).thenReturn(Optional.empty());
 
-        Usuario resultado = authController.registrarUsuario(nuevoUsuario);
+        // Ejecutar y verificar la excepción
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> authService.registrar(usuarioDTO));
 
-        //verificar que el usuario no es nulo
-        assertNotNull(resultado);
-        assertEquals("nuevoUsuario", resultado.getNombre());
-
-        // verificar que se llamó al metodo save 1 vez
-        verify(usuarioService, times(1)).save(any(Usuario.class));
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("Rol no encontrado", exception.getReason());
     }
+
+
 }

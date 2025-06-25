@@ -29,7 +29,6 @@ public class DataLoaderUsuarios implements CommandLineRunner {
     public void run(String... args) throws Exception {
         // cargar roles básicos si no existen
         cargarRolesBasicos();
-
         // generar usuarios de prueba
         generarUsuarios();
     }

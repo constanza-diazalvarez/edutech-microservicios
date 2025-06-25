@@ -5,11 +5,15 @@ import com.edutech.model.Descuento;
 import com.edutech.model.Pago;
 import com.edutech.repository.DescuentoRepository;
 import com.edutech.repository.PagoRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import utils.JwtUtil;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,10 +34,6 @@ public class PagoServiceTest {
     @MockBean
     private DescuentoRepository descuentoRepository;
 
-    //el test generarPago_ConCodigoDescuentoInvalido_DeberiaCrearPagoSinDescuento
-    //daba un error porque el mock de pagoRepository se llamaba mas veces de las que se especifica(en el dataloader + el test)
-    @MockBean // Esto evita que el DataLoader real se ejecute
-    private DataLoader dataLoader;
     // servicio real a probar
     @Autowired
     private PagoService pagoService;
@@ -54,91 +54,104 @@ public class PagoServiceTest {
 
         // pago con descuento aplicado
         pagoConDescuento = Pago.builder()
-                .idCliente(1)
+                .idUsuario(1)
                 .descuento(descuentoValido)
                 .build();
 
         // pago sin descuento
         pagoSinDescuento = Pago.builder()
-                .idCliente(2)
+                .idUsuario(2)
                 .descuento(null)
                 .build();
     }
 
-
     @Test
     void generarPago_ConCodigoDescuentoValido_DeberiaAplicarDescuento() {
-        // configuracion del mock = existe el descuento
-        when(descuentoRepository.findByCodigo("DESC20")).thenReturn(Optional.of(descuentoValido));
+        // mock del request
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getHeader("Authorization")).thenReturn("Bearer token_valido");
 
-        // configuracion del mock para que devuelva pago con descuento
-        when(pagoRepository.save(any(Pago.class))).thenReturn(pagoConDescuento);
+        // mock estático de JwtUtil
+        try (MockedStatic<JwtUtil> mockedJwtUtil = Mockito.mockStatic(JwtUtil.class)) {
+            //los mocks estáticos
+            mockedJwtUtil.when(() -> JwtUtil.obtenerToken(request)).thenReturn("token_valido");
+            mockedJwtUtil.when(() -> JwtUtil.obtenerId("token_valido")).thenReturn(1);
 
-        // metodo a probar
-        Pago resultado = pagoService.generarPago(1, "DESC20");
+            // mocks de repositorios
+            when(descuentoRepository.findByCodigo("DESC20")).thenReturn(Optional.of(descuentoValido));
+            when(pagoRepository.save(any(Pago.class))).thenReturn(pagoConDescuento);
 
-        // verificaciones:
-        //pago no nulo
-        assertNotNull(resultado);
-        //coincide con el idcliente
-        assertEquals(1, resultado.getIdCliente());
-        //debe tener el descuento
-        assertNotNull(resultado.getDescuento());
-        //si codigo no coincide
-        assertEquals("DESC20", resultado.getDescuento().getCodigo());
-        //% no coincide
-        assertEquals(0.2, resultado.getDescuento().getPorcentaje());
+            // Ejecutar el metodo
+            Pago resultado = pagoService.generarPago(request, "DESC20");
 
-        // verificar que se llama a los metodos esperados
-        verify(descuentoRepository).findByCodigo("DESC20");
-        verify(pagoRepository).save(any(Pago.class));
+            // Verificaciones
+            assertNotNull(resultado);
+            assertEquals(1, resultado.getIdUsuario());
+            assertNotNull(resultado.getDescuento());
+            assertEquals("DESC20", resultado.getDescuento().getCodigo());
+            assertEquals(0.2, resultado.getDescuento().getPorcentaje(), 0.001);
+
+            // Verificar interacciones
+            mockedJwtUtil.verify(() -> JwtUtil.obtenerToken(request));
+            mockedJwtUtil.verify(() -> JwtUtil.obtenerId("token_valido"));
+            verify(descuentoRepository).findByCodigo("DESC20");
+            verify(pagoRepository).save(any(Pago.class));
+        }
     }
 
     @Test
-    void generarPago_ConCodigoDescuentoInvalido_DeberiaCrearPagoSinDescuento() {
-        //mock para simular que no existe el descuento
-        when(descuentoRepository.findByCodigo("CODIGO_INVALIDO")).thenReturn(Optional.empty());
+    void generarPago_ConCodigoDescuentoInvalido_DeberiaAsignarDescuentoPorDefecto() {
+        // configurar mocks estaticos para JwtUtil
+        try (MockedStatic<JwtUtil> mockedJwtUtil = Mockito.mockStatic(JwtUtil.class)) {
+            // simular que no existe el descuento con código inválido
+            when(descuentoRepository.findByCodigo("CODIGO_INVALIDO"))
+                    .thenReturn(Optional.empty());
 
-        //mock para devolver un pago sin descuento
-        when(pagoRepository.save(any(Pago.class))).thenReturn(pagoSinDescuento);
+            // crear un descuento por defecto (DSCTO0)
+            Descuento descuentoPorDefecto = Descuento.builder()
+                    .idDescuento(3L)
+                    .codigo("DSCTO0")
+                    .porcentaje(0.0)
+                    .build();
 
-        // Ejecutar el metodo con un código inválido
-        Pago resultado = pagoService.generarPago(2, "CODIGO_INVALIDO");
+            // simular que existe el descuento por defecto
+            when(descuentoRepository.findByCodigo("DSCTO0"))
+                    .thenReturn(Optional.of(descuentoPorDefecto));
 
-        // Verificaciones
-        //pago no nulo
-        assertNotNull(resultado);
-        //idcliente no coincide
-        assertEquals(2, resultado.getIdCliente());
-        //no debe tener dscto aplicado
-        assertNull(resultado.getDescuento());
+            // mock del request y token JWT
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            when(request.getHeader("Authorization")).thenReturn("Bearer token_valido");
 
-        // verificar con los mocks
-        verify(descuentoRepository).findByCodigo("CODIGO_INVALIDO");
-        verify(pagoRepository).save(any(Pago.class));
+            // configurar los mocks estáticos
+            mockedJwtUtil.when(() -> JwtUtil.obtenerToken(request)).thenReturn("token_valido");
+            mockedJwtUtil.when(() -> JwtUtil.obtenerId("token_valido")).thenReturn(2);
+
+            // mock del pago guardado (con descuento por defecto)
+            Pago pagoGuardado = Pago.builder()
+                    .idUsuario(2)
+                    .descuento(descuentoPorDefecto)
+                    .build();
+            when(pagoRepository.save(any(Pago.class))).thenReturn(pagoGuardado);
+
+            // ejecutar el metodo
+            Pago resultado = pagoService.generarPago(request, "CODIGO_INVALIDO");
+
+            // Verificaciones
+            assertNotNull(resultado);
+            assertEquals(2, resultado.getIdUsuario());
+
+            // Verificar que se asignó el descuento por defecto (no null)
+            assertNotNull(resultado.getDescuento());
+            assertEquals("DSCTO0", resultado.getDescuento().getCodigo());
+
+            // verificar interacciones con el repositorio y jwt
+            mockedJwtUtil.verify(() -> JwtUtil.obtenerToken(request));
+            mockedJwtUtil.verify(() -> JwtUtil.obtenerId("token_valido"));
+            verify(descuentoRepository).findByCodigo("CODIGO_INVALIDO");
+            verify(descuentoRepository).findByCodigo("DSCTO0");
+            verify(pagoRepository).save(any(Pago.class));
+        }
     }
-
-    @Test
-    void generarPago_SinCodigoDescuento_DeberiaCrearPagoSinDescuento() {
-        // mock para findByCodigo con null
-        when(descuentoRepository.findByCodigo(null)).thenReturn(Optional.empty());
-
-        //mock para save
-        when(pagoRepository.save(any(Pago.class))).thenReturn(pagoSinDescuento);
-
-        //metodo del srvice
-        Pago resultado = pagoService.generarPago(2, null);
-
-        //verificaciones
-        assertNotNull(resultado);
-        assertEquals(2,resultado.getIdCliente());
-        assertNull(resultado.getDescuento());
-
-        // interaccion con mock
-        verify(descuentoRepository).findByCodigo(null); // Verifica que se llama con null
-        verify(pagoRepository).save(any(Pago.class));
-    }
-
 
     @Test
     void findAll_DeberiaRetornarTodosLosPagos() {
@@ -168,7 +181,7 @@ public class PagoServiceTest {
 
         //verificaciones
         assertNotNull(resultado);
-        assertEquals(1, resultado.getIdCliente());
+        assertEquals(1, resultado.getIdUsuario());
         assertNotNull(resultado.getDescuento());
 
         // verificar que se llama al repositorio
@@ -185,7 +198,7 @@ public class PagoServiceTest {
 
         //verificaciones
         assertNotNull(resultado);
-        assertEquals(2, resultado.getIdCliente());
+        assertEquals(2, resultado.getIdUsuario());
         assertNull(resultado.getDescuento());
 
         //verificar que se llama al repositorio
