@@ -11,12 +11,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +30,9 @@ public class InscripcionController {
 
     @Autowired
     private InscripcionService inscripcionService;
+
+    @Autowired
+    private Environment environment;
 
     @PostMapping("/{idCurso}")
     @Operation(
@@ -105,6 +111,14 @@ public class InscripcionController {
         URI redireccion = URI.create("http://localhost:8080/api/contenido/visualizar/contenido/" + idContenido);
         return ResponseEntity.status(HttpStatus.FOUND).location(redireccion).build(); // 302
     }
+
+    @Profile("dev")
+    @GetMapping("/dev/inscripciones-por-usuario/{idUsuario}")
+    public ResponseEntity<List<Inscripcion>> obtenerTodasLasInscripciones(
+            @PathVariable("idUsuario") Integer idUsuario) {
+        return ResponseEntity.ok(inscripcionService.obtenerInscripcionesPorUsuario(idUsuario));
+    }
+
 }
 
 

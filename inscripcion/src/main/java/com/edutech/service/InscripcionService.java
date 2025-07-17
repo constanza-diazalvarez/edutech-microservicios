@@ -31,6 +31,7 @@ public class InscripcionService {
     @Autowired
     private RestTemplate restTemplate;
 
+
     public List<Inscripcion> obtenerInscripcionesPorUsuario(Integer idUsuario) {
         return inscripcionRepository.findByIdUsuario(idUsuario);
     }

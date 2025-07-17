@@ -38,38 +38,38 @@ public class ApiGatewayController {
     @RequestMapping("/api/{servicio}/**") // → '/**' significa que puede venir cualquier ruta adicional despues
     public ResponseEntity<?> redirigir(
             /*↑redirigir captura cualquier peticion (GET, POST, etc) que empiece con /api/{servicio}/**
-            *ResponseEntity: clase generica que representa una respuesta http completa
-            *   contiene:
-            *       cuerpo(body) → return ResponseEntity.ok("Hola mundo!")
-            *       estado http (status) → return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontró");
-            *       headers →
-            *           HttpHeaders headers = new HttpHeaders();
-            *           headers.set("Mi-Encabezado", "valor");
-            *           return ResponseEntity.ok().headers(headers).body("Hola");
-            */
+             *ResponseEntity: clase generica que representa una respuesta http completa
+             *   contiene:
+             *       cuerpo(body) → return ResponseEntity.ok("Hola mundo!")
+             *       estado http (status) → return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontró");
+             *       headers →
+             *           HttpHeaders headers = new HttpHeaders();
+             *           headers.set("Mi-Encabezado", "valor");
+             *           return ResponseEntity.ok().headers(headers).body("Hola");
+             */
             @PathVariable("servicio") String servicio, //rescata el valor de "servicio" en la ruta
             HttpServletRequest request,
             /*↑clase de java servlet usada por springboot para manejar peticiones http. Es un objeto con todos los datos de la peticion (ruta, metodo, etc)
-            * Cuando un cliente hace una peticion http el servidor crea un objeto httpservletrequest con toda la informacion de la peticion
-            * Informacion que contiene:
-            *   •Metodo http: GET, POST, PUT, etc
-            *       request.getMethod();
-            *   •URI: ruta solicitada
-            *       request.getRequestURI();
-            *   •protocolo: HTTP
-            *       request.getProtocol();
-            *   •direccion ip del clienten
-            *       request.getRemoteAddr();
-            *   •header
-            *       request.getHeader("Authorization");
-            *       todos los headers:
-            *           Enumeration<String> nombresHeaders = request.getHeaderNames();
-            *           while (nombresHeaders.hasMoreElements()) {
-            *               String nombre = nombresHeaders.nextElement();
-            *               String valor = request.getHeader(nombre);
-            *               // hacer algo con el header
-            *           }
-            */
+             * Cuando un cliente hace una peticion http el servidor crea un objeto httpservletrequest con toda la informacion de la peticion
+             * Informacion que contiene:
+             *   •Metodo http: GET, POST, PUT, etc
+             *       request.getMethod();
+             *   •URI: ruta solicitada
+             *       request.getRequestURI();
+             *   •protocolo: HTTP
+             *       request.getProtocol();
+             *   •direccion ip del clienten
+             *       request.getRemoteAddr();
+             *   •header
+             *       request.getHeader("Authorization");
+             *       todos los headers:
+             *           Enumeration<String> nombresHeaders = request.getHeaderNames();
+             *           while (nombresHeaders.hasMoreElements()) {
+             *               String nombre = nombresHeaders.nextElement();
+             *               String valor = request.getHeader(nombre);
+             *               // hacer algo con el header
+             *           }
+             */
             @RequestBody(required = false) String body //el body pordria no existir como en un GET
             //@RequestHeader HttpHeaders headers
     ) {
@@ -109,10 +109,10 @@ public class ApiGatewayController {
 
         /*peticion del cliente: POST /api/auth/login
          *servicio: "auth"
-        * request.getRequestURI() = /api/auth/login
-        * quitamos /api/{servicio}: String path = request.getRequestURI().replace("/api/" + servicio, "");
-        * resultado: path = /login
-        * nueva url: String url = "http://localhost:8085" + path;
+         * request.getRequestURI() = /api/auth/login
+         * quitamos /api/{servicio}: String path = request.getRequestURI().replace("/api/" + servicio, "");
+         * resultado: path = /login
+         * nueva url: String url = "http://localhost:8085" + path;
          *
          *
          * →getRequestURI(): devuelve la ruta completa sin incluir domunio, ip o puerto
@@ -135,21 +135,21 @@ public class ApiGatewayController {
 
 
         /*↑uno de los headers es Autorization por donde pasa el token, pero otro es Content-Type
-        * por eso se le indica al header que el cuerpo(body) es de tipo json
-        * Content-Type: application/json
+         * por eso se le indica al header que el cuerpo(body) es de tipo json
+         * Content-Type: application/json
          * →SE PORDRIAN AGREGAR LOS TOKENS AQUI←*/
 
         HttpEntity<String> entity = new HttpEntity<>(body, headers);
         /*HttpEntity: objeto que representa la peticion HTTP completa. Contiene el body y los headers
-        *   →esto es lo que el RestTemplate envia al microservicio en cuestion*/
+         *   →esto es lo que el RestTemplate envia al microservicio en cuestion*/
 
         try {
             //↓aqui es donde se hace la llamada HTTP al microservicio
             ResponseEntity<String> respuesta = restTemplate.exchange(
                     /*exchance es la manera de llamar a otro servicio http
-                    * exchange hace una petición HTTP con el metod o, headers y body que le indicas, y devuelve
-                    * la respuesta completa (código de estado, headers y body).
-                    * Es la forma más flexible de RestTemplate para interactuar con servicios HTTP*/
+                     * exchange hace una petición HTTP con el metod o, headers y body que le indicas, y devuelve
+                     * la respuesta completa (código de estado, headers y body).
+                     * Es la forma más flexible de RestTemplate para interactuar con servicios HTTP*/
                     url,
                     metodo,
                     entity,
@@ -178,8 +178,6 @@ public class ApiGatewayController {
     public ResponseEntity<?> incribirPagarCurso(
             @PathVariable("idCurso") Integer idCurso,
             @RequestBody(required = false) Map<String, Object> bodyRequest,
-            //@RequestBody(required = false) String codigoDescuento,
-            //@RequestParam(value = "codigoDescuento", required = false) String codigoDescuento,
             HttpServletRequest request
     ){
         String token = JwtUtil.obtenerToken(request);
