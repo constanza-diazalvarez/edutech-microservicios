@@ -62,7 +62,7 @@ public class ProgresoService {
                 "http://localhost:8080/api/contenido/curso/" + idCurso,
                 HttpMethod.GET,
                 entity,
-                List.class // no me interesa el tipo que hay dentro de la lista, por defecto se interpreta asi: List<Map<String, Object>>
+                List.class //no me interesa el tipo que hay dentro de la lista, por defecto se interpreta asi: List<Map<String, Object>>
         );
         List<Map<String, Object>> contenidos = respContenidos.getBody();
         List<Integer> idContenidoCompleto = new ArrayList<>();
